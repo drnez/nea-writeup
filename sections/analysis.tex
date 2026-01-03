@@ -1,0 +1,262 @@
+% LTeX: language=en-GB enabled=true
+
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+\newenvironment{qanda}{\setlength{\parindent}{0pt}}{\bigskip}
+\newcommand{\Q}{\bigskip\bfseries Q: }
+\newcommand{\A}{\par\textbf{A:} \normalfont}
+
+\subsection{Introduction}
+
+A backup utility is an essential software program for any computer system, allowing users to keep their files and data safe in the case of hardware failure, or various possible software issues. It is particularly important that these files are stored externally, on another device, in case of such hardware failure. I am interested in Linux systems, and so I will create a backup utility for storing files on an external server from a client PC. This will require various components, such as encrypting the files stored on the server, encrypting the transmission of files between client and server, and compressing the files being transferred. 
+
+The main benefits of the program I will create over existing systems are that my utility will be fully open source, so the function of the program can be independently inspected by any user, and that it will be tailored to my client’s exact needs: many existing applications are either closed source, or too bloated with unnecessary features and unintuitive interfaces. 
+
+I will research this through two main methods: discussion with my client, and use of reliable sources. The latter may come from reputable books, websites, papers, or journals, and will be cited. 
+
+\subsection{Client Overview}
+
+My client will be my mother – Elham Asadi – who informed me she is looking for such software. Therefore, I will tailor this program for her exact needs, which I will establish her specific requirements through a client interview. This has the benefit over existing systems of being exactly the format she would like, without additional features which add complexity and bloat to the final program, and usable with the exact desired interface. 
+
+\subsection{Client Interview} \label{ClientInterview}
+
+Below is a record of the transcript of my first interview with my client. I will use this to inform the design requirements for this backup utility. 
+
+\begin{qanda}
+
+\Q I understand that you are looking for a backup utility? 
+\A Yes, I'd like to be able to create external backups of my system on a separate device. 
+
+\Q What devices would you like to create backups of? 
+\A My laptop and desktop PC. 
+
+\Q What operating system are those devices running? 
+\A Arch Linux, and Ubuntu 22.04 respectively, but I would like this to work on any modern Linux distribution - I may want to change in the future! 
+
+\Q Where would you like the backups to be stored? 
+\A I have a fairly old laptop which I use to run a few home server utilities. I’d like to also store the backups here, if possible. 
+
+\Q Can you be more specific about the laptop? 
+\A It's around 15-20 years old, I'm not exactly sure, with 4GB of RAM. Also, it's running Ubuntu server. 
+
+\Q Would you like a third-party server in a data centre to store the backups instead? 
+\A Absolutely not. The key here is that this is all fully local to me, and that I am the only one with access to the backups. Many current backup utilities lack this! 
+
+\Q Would you want the files stored to be encrypted in transmission, and while stored? 
+\A Certainly, this is crucial! Nobody but me should be able to decipher the files stored. 
+
+\Q Do you have any other priorities? 
+\A File transfers should be as quick as possible, and as little space as possible should be used on the server device. Oh, and I want to be sure that transfers have been successful. 
+
+\Q What type of files will you be backing up? 
+\A Well, I will be using this for my whole system, so all sorts of files. I guess there will be text files, like system configuration files, image files, video files, and raw binary executables. 
+
+\Q Okay. The non-text files you were talking about, are they already compressed? 
+\A Yes actually, almost all of my audio and video files are already compressed. 
+
+\Q Very good, thanks. What about the user interface, what form should this take? 
+\A I want a very simple command line interface, with no messy graphical elements. It could have an interactive mode, but there should certainly be a way to use it non-interactively, with just command line flags, so that I can use it in scripts. 
+
+\Q Finally, is it important to you for this project to be finished by a certain date? 
+\A Absolutely. It is essential for this to be finished by [date I actually finish]. This is one of my key priorities, since that is when I will purchase a laptop for a friend, and I’d like to have the backup software ready for them when they receive it. 
+
+\Q Does this mean I need to ensure the program works for a different laptop’s specifications? 
+\A No, I don’t think so, that laptop should be very similar to my one, that I’ve already described. 
+
+\end{qanda}
+
+\subsection{Specification}
+
+Based on the requirements established in the client interview, I have established the following specification points. These will guide me throughout the development process, and can serve as a metric against which the final product is evaluated.
+
+\begin{enumerate}
+    \item The program should allow the user to create file backups on a server, run by the client themselves, 
+    \begin{enumerate}
+        \item Both the client and the server programs should be created, 
+        \item They should be able to work together, with a server being able to store the user’s backed up files, 
+    \end{enumerate}
+    \item The client program should run on modern Linux systems, usable on a laptop or desktop computer, 
+    \begin{enumerate}
+        \item An installable binary package should be created that is executable on amd64 Linux systems, 
+        \item The client should not at any point use more than [some]MB of RAM, or more than [some]\% of CPU time while running on a modern laptop (i9-12950HX processor for a test case), 
+    \end{enumerate}
+    \item It should be usable with an intuitive command-line interface, not requiring interactive input, 
+    \begin{enumerate}
+        \item All required functions of the program should be able to be passed in through command line flags and parameters, 
+        \item There can be an optional interactive mode, but this should not allow any more functionality than the non-interactive mode, 
+        \item There should be no graphical interface, 
+    \end{enumerate}
+    \item The server should be able to run on a low-end laptop 10-15 years old, 
+    \begin{enumerate}
+        \item The program should avoid reading and writing to the system drives as much as possible, since most such devices use HDDs, 
+        \item The server program should not at any point use more than [some]MB of RAM, or more than [some]\% of CPU time while running on such a device (i5-[something] processor as a test case), 
+    \end{enumerate}
+    \item All file transfers should be secure, so a man-in-the-middle would not be able to intercept data, 
+    \begin{enumerate}
+        \item Any data intercepted should be of a format that the interceptor would not be able to decipher, or gain any useful information from, 
+        \item The methods used should be verified to be correct, 
+    \end{enumerate}
+    \item The files stored on the server should all be encrypted with a key only accessible to the client, 
+    \begin{enumerate}
+        \item Only the client should be able to decipher the files stored on the server, 
+        \item The encryption should not increase the size of the files significantly - this will be defined as the larger of 1MB, and 2\% of the original file size, 
+    \end{enumerate}
+    \item Files stored on the server should be compressed such that they use a reasonable amount of storage, 
+    \begin{enumerate}
+        \item They should be at most as large as the uncompressed files, i.e. file size should never increase following compression, 
+        \item The client should be able to uncompress any file when needed by the user, storing any needed details about the compression within the file, 
+    \end{enumerate}
+    \item File transfers should be verifiably correct, so data is not corrupted during transmission,
+    \begin{enumerate}
+        \item Once a file has been transferred to the server, it should be compared with the original file on the client device, 
+        \item This checking should be with a much smaller version of the file than that which was originally sent for most files – it should be up to [some]kB, 
+    \end{enumerate}
+    \item File transfers should be as quick as possible, with duplicate data not sent, 
+    \begin{enumerate}
+        \item Files that remain unchanged on the server since the last backup should not be sent again, rather a message should confirm that the file should remain as it was in the previous backup. 
+    \end{enumerate}
+\end{enumerate}
+
+\subsection{Technical Points}
+
+Based on the specification points established, I have extracted the key technical challenges that will be involved in building the software below. 
+
+\begin{enumerate}
+    \item Implement RSA style transmission with asymmetric encryption for key exchange between client and server, 
+    \item Implement symmetric encryption between client and server after keys have been established, 
+    \item Use hashing to verify the integrity of messages transferred, 
+    \item Ensure unchanged files are not transferred, 
+    \item The files stored on the server should all be encrypted with a key only accessible to the client, 
+    \item Implement a lossless compression algorithm for files stored in the server. 
+\end{enumerate}
+
+\subsection{Program Structure Diagram}
+
+This diagram (Figure \ref{ProgramStructureDiagram}) shows how these main technical blocks will interact with each other in the client and server programs. While they will run different programs, these share a common transmission and receiving procedure. 
+
+\begin{figure}[h]
+    \includegraphics[width=\linewidth]{images/Analysis-program-structure.jpg} 
+    \caption{Program Structure Diagram}
+    \label{ProgramStructureDiagram}
+\end{figure}
+
+I will now consider how I can implement these main blocks.
+
+\subsection{Transmission Procedure}
+
+This is one of the largest components of the program, which is used for any and all communications between the client and server devices. There are some key points that need to be individually considered:
+\begin{enumerate}
+    \item  There needs to be a procedure used to exchange keys between the sender and receiver, perhaps in a similar style to the RSA algorithm, providing asymmetric encryption, 
+    \item There must be a symmetric encryption algorithm used to encrypt communications following the establishment of keys, 
+    \item The communications should be verified to be correct, using a method to check that there has not been any corruption during data transfer.
+\end{enumerate}
+
+\subsubsection{Key Exchange}
+
+The three algorithms I will consider for this are RSA, Diffie-Hellman Key Exchange, and Elliptic Curve Cryptography.
+
+These algorithms are commonly used, and very well documented. All three rely on mathematical problems that are intractable to solve without some prior knowledge: RSA relies on the difficulty in factoring a large semiprime integer (one with exactly two prime factors), while Diffie-Hellman and elliptic curve systems rely on the discrete logarithm problem. 
+
+While elliptic curve cryptography can provide equivalent security with much smaller keys, and requires less processing power for the sender and receiver, this is unlikely to be at all impactful on the small scale of this backup utility, where this asymmetric encryption is just used to share a symmetric encryption key. However, these algorithms are tough to implement, and involve very high-level mathematics. This could increase the time taken to deliver the program past the client’s deadline, and adds more avenues for potential bugs to develop. This can be very dangerous, as shown in the following paper \cite{10.1007/978-3-642-27954-6_11}, where a small error in the implementation led to researchers being able to extract the full key. 
+
+I will now consider the basic implementation details of the RSA and Diffie-Hellman algorithms to aid in my decision-making.
+
+\paragraph{RSA}
+
+\begin{enumerate}
+    \item The receiver generates two large primes, $p,q$, then computes their product, $n = pq$.
+    \item Euler’s Totient function, $\phi(p,q) = (p-1)(q-1)$, is applied to $n$.
+    \item An encryption exponent, $e$, is selected such that $1 < e < \phi(n)$, and $e$ is relatively prime with $\phi(n)$. Note that $a,b \in \mathbb{Z}^+$ are relatively prime $\iff \nexists\ x \in \mathbb{Z} : x > 1,\ x\,|\,a,\ x\,|\,b$.
+    \item A decryption exponent, $d$, is calculated such that $de = 1 \pmod{\phi(n)}$. The extended Euclidian algorithm provides a method for this.
+    \item The public key is formed from $(n,e)$ and the private key $(n,d)$. The receiver sends their public key only to the sender. 
+    \item The encrypted ciphertext, $C$, is calculated through $C = M^e \pmod n$, where $M$ is some numerical representation of the message. 
+    \item The ciphertext is decrypted into the plaintext message, $M$, by the calculation $M = C^d \pmod n$. \cite{RSAgfg}
+\end{enumerate}
+
+Now, the sender encrypts their message with the receiver’s public key, and then only the receiver can decrypt it since only they have the private key. Computing $\phi(n)$ is infeasible without knowing the primes, $p,q$, that $n$ is a product of, and this is also infeasible to compute due to the large size of the primes. This means no other party can calculate the private key from the public key.
+
+\paragraph{Diffie-Hellman key exchange}
+
+\begin{enumerate}
+    \item Either the sender or the receiver randomly generates a large prime, $p$, and a large number, $g$, and sends these to the other. 
+    \item The sender and receiver then generate random secrets $s_a$ and $s_b$ respectively, for $s_a,s_b \in \mathbb{Z}^+$. 
+    \item The sender sends $a = g^{s_a}\pmod p$ to the receiver, who computes $a^{s_b} = g^{s_as_b}\pmod p$. 
+    \item The receiver sends $b = g^{s_b}\pmod p$ to the receiver, who computes $b^{s_a} = g^{s_as_b}\pmod p$. 
+    \item Now, they both have the shared secret, $S = g^{s_as_b}\pmod p$, which can be used to establish a shared key. \cite{OxCompSecNotes}
+\end{enumerate}
+
+An attacker would have access to $g,\ p,\ g^{s_a}\pmod p,\ g^{s_b}\pmod p$, and need to compute $S = g^{s_as_b}\pmod p$ to compromise the conversation. A quick solution to the Discrete Logarithm Problem would imply a quick solution to this problem, but one is not currently known. This is central to the security of this key exchange, similarly to the prime factorisation problem for RSA. 
+
+As can be seen, RSA and Diffie-Hellman are very similar in security, and difficulty of implementation, however the advantage of RSA is that it can also be used to provide signed certificates to prove the authenticity of the sender. This has not been an aim as of yet, but using RSA will make it easier to implement this if desired in the long-term, or at the end of the project if there is sufficient time.
+
+\subsubsection{Symmetric Encryption}
+
+Following the establishment of keys, it is greatly advantageous to use a symmetric encryption system rather than continuing with asymmetric systems, since these are much faster and more efficient. A similar process is used by the TLS protocol, which secures more internet communications. 
+
+There are a great number of available symmetric encrpytion algorithms, including the Caesar Cipher, AES, ChaCha20, and Blowfish, among others.
+
+The Caesar cipher can be immediately eliminated, since it is trivial to break with even very simple cryptanalysis. However, the other algorithms are very similar in that they all provide secure encryption that is very tough to break. The final choice of algorithm should be one that is well-documented, simple to implement, and efficient to run.
+
+However, AES has been used as the basis of internet security for decades, and as such there has been great research into verifying its security, and ensuring implementations do not contain vulnerabilities. Therefore, I will use this for my symmetric encryption needs.
+
+\subsubsection{Verifying the Integrity of Communications}
+
+It is necessary to ensure all communications have arrived at the desired recipient uncorrupted, exactly as they were sent. Therefore, some method must be used to ensure that this is the case. 
+
+Some simple methods for this include majority voting, where each bit is sent an odd number (> 1) times, and the most common bit is accepted, and parity bits, where a bit is added to the end of each string of defined length to ensure that the number of 0s or 1s is either even or odd as desired. 
+
+However, these methods allow multiple mistakes to “cancel” each other out, and say little about the correctness of the whole message. A more robust method is to compute some form of hash from the message, and send that directly after it. The receiver will also compute a hash of the data received, and compare it to the hash sent. If these match, then the data has arrived intact. This verifies that the whole message has arrived safely, while requiring comparatively little additional data to be transferred. Plus, since there is no need for a cryptographic hash function (it is not important if the hash can be reversed), these algorithms can run very quickly.
+
+\textbf{[describe the function of the algorithm]}
+
+\subsection{Compression} \label{CompressionAnalysis}
+
+Of course, I will want to use a lossless algorithm, since a backup program should not change the files being backed up – the whole point is to provide a safe copy of the actual system files themselves. Plus, lossy compression of important system files would be catastrophic. 
+
+There is also the key problem that many files being backed up will already be compressed. The system must be able to deal with these, not producing output with larger file size than the uncompressed versions. 
+
+There is also the important consideration of whether each file is individually compressed, or whether the whole block of files is compressed together. 
+
+There are two broad options I can take based on the above. I could either compress the whole block of data, or each file individually, with some metadata at the beginning of the file outlining what procedure (if any) was used.
+
+The first option will not be very useful, since different file types can be effectively compressed using vastly different algorithms, so I will not be able to achieve significant size reductions in this way. Therefore, I believe the right choice is to compress files individually. 
+
+This means that I would need to write different algorithms for different file types, and have a way of detecting files that have already been compressed. However, the discussion with my client revealed that she already compresses the majority of non-text files on her system. So, I have decided to just implement compression for plaintext files, where the most space savings can be made, while minimising the unnecessary processing taking place, so the program executes as quickly as possible. This will also reduce development time, allowing me to finish the program in time for my client’s strict deadline. 
+
+Three lossless plaintext compression algorithms I will consider as the basis of my algorithm are Run-Length Encoding, Huffman Coding, and Prediction by Partial Matching.
+
+\textbf{Some depth on the algorithms, how they work, and choosing Huffman}
+
+\subsection{Detecting Unchanged Files}
+
+I had initially come up with two methods that could be used for this. These were comparing the files (the previously backed-up version and the new file) line by line, and comparing a hash of the files. 
+
+The first method is pointless, since the file could just be overwritten in the same time. Therefore, I was planning on using the second method. However, browsing forums for a quicker way revealed that I can simply compare the timestamps of the file to the time of the previous backup. This is much quicker, and does not require any communication with the backup server beyond getting the date of the last backup and list of files in that backup, which could be locally stored on the client anyway. \cite{TimestampsForum}
+
+As such, this is the method I will use.
+
+\subsection{Encrypting Files}
+
+I can use the same algorithm I have implemented for providing symmetric encryption for transmission after key exchange for this purpose, to minimise redundant work. The only difference is that the encryption key will be stored somewhere on the client device, rather than only being used in the one-time communication.
+
+\subsection{Class Diagram}
+
+\textbf{Draw one}
+
+\subsection{Order of Completion}
+
+This is a rough timeline of how long I expect it would take me to complete the sections outlined above.
+
+\begin{enumerate}
+    \item Compression - 2 weeks
+    \item Basic symmetric encryption - 1 week 
+    \item RSA style key exchange - 2 weeks 
+    \item Hashing to verify transmission - 1 week 
+    \item Terminal interface - 1 week 
+    \item Putting it all together - 2 weeks
+\end{enumerate}
+
+\textbf{Edit to remove(?) symmetric encryption}
+
+\end{document}

@@ -1,0 +1,84 @@
+% LTeX: language=en-GB enabled=false
+
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm, physics, listings, centernot}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+\usepackage[backend=biber, style=numeric, language=british,sorting=none]{biblatex}
+\addbibresource{references.bib}
+
+\usepackage[a4paper, top=1in, bottom=1in, left=1in, right=1in, heightrounded]{geometry}
+\renewcommand{\baselinestretch}{1.15}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.8em}
+
+\usepackage{xurl, graphicx, xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks = true,
+    urlcolor   = blue,
+    linkcolor  = blue,
+    citecolor  = red
+}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\setlength{\skip\footins}{1cm}
+
+\usepackage{subfiles}
+\usepackage{titlesec}
+\usepackage[section]{placeins}
+
+\usepackage{listings}
+
+\definecolor{bluekeywords}{rgb}{0,0,1}
+\definecolor{greencomments}{rgb}{0,0.5,0}
+\definecolor{redstrings}{rgb}{0.64,0.08,0.08}
+\definecolor{xmlcomments}{rgb}{0.5,0.5,0.5}
+\definecolor{types}{rgb}{0.17,0.57,0.68}
+
+\lstset{
+    language=[Sharp]C,
+    backgroundcolor={\color{gray!20}},
+    captionpos=b,
+    numbers=left,
+    numberstyle=\tiny,
+    frame=lines,
+    showspaces=false,
+    showtabs=false,
+    breaklines=true,
+    showstringspaces=false,
+    breakatwhitespace=true,
+    escapeinside={(*@}{@*)},
+    commentstyle=\color{greencomments},
+    morekeywords={partial, var, value, get, set},
+    keywordstyle=\color{bluekeywords},
+    stringstyle=\color{redstrings},
+    basicstyle=\ttfamily\small,
+}
+
+\title{AQA A Level Computer Science NEA}
+\author{Shayan Nezami}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\listoffigures
+\lstlistoflistings
+\pagebreak
+
+\section{Analysis}
+\subfile{sections/analysis}
+\pagebreak
+
+\section{Documented Design and Technical Solution}
+\subfile{sections/design}
+\pagebreak
+
+\printbibliography
+
+\end{document}

@@ -1,0 +1,104 @@
+% LTeX: language=en-GB enabled=true
+
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\subsection{Huffman Compression}
+
+As decided upon in my Analysis (Section \ref{CompressionAnalysis}), I will use Huffman Coding to compress all plaintext files that are being backed up. The compression and decompression will occur on the client-side, before the files and sent, and after they are received.
+
+The benefits of this are twofold. Firstly, this means less data is transmitted, reducing the risk of corruption, and speeding up the backup process. Secondly, as identified in my Client Interview (Section \ref{ClientInterview}), my client will run the server on hardware that is significantly less powerful than their laptop, which acts as the client. Therefore, it is advantageous to run as much processing as possible on the client-side.
+
+\subsubsection{Encoding and Decoding}
+
+This website \cite{PurdueHuffman} provides a thorough written explanation of the Huffman algorithm. Using this to better understand the process, I have created a flowchart depicting how I can implement the encoding (Figure \ref{GenericHuffmanEncoding}), and the decoding (Figure \ref{GenericHuffmanDecoding}).
+
+These flowcharts include implementation details, such as how dictionaries, stacks, priority queues, and recursive subroutines are used to carry out some of the high-level tasks described in the source. My implementation also ensures the compression does not (significantly) increase the size of the files, by using a 1-bit flag at the start of the file to indicate whether compression has been used, and not using any compression if it would increase the file size overall. Do note that the final file will still be one byte larger in this case due to the extra bit added, but this is insignificant and unavoidable.
+
+\begin{figure}
+    \includegraphics[width=\linewidth]{images/HuffmanEncodingGeneric.pdf}
+    \caption{A flowchart depicting my Huffman encoding procedure}
+    \label{GenericHuffmanEncoding}
+\end{figure}
+
+\begin{figure}
+    \includegraphics[width=\linewidth]{images/HuffmanDecoding.jpg}
+    \caption{A flowchart depicting my Huffman decoding procedure}
+    \label{GenericHuffmanDecoding}
+\end{figure}
+
+\subsubsection{Reading and Writing Bytes}
+
+These implementations assume writing bits to, and reading bits from, files is a trivial task. However, this proved to be quite challenging, since one can only write to, and read from, files one byte at a time in C\#, so I needed to implement additional helper methods for this.
+
+Therefore, I constructed pseudocode for ByteMaker (Listing \ref{ByteMakerPseudocode}) and ByteReader (Listing \ref{ByteReaderPseudocode}) classes, which respectively allow writing to and reading from binary files.
+
+\FloatBarrier
+\lstinputlisting[
+    language=sh,
+    caption={Pseudocode for the ByteMaker class},
+    label={ByteMakerPseudocode},
+]{code/ByteMaker.pseudocode}
+\FloatBarrier
+
+The ByteMaker provides methods to write single bits (as integers 0/1), lists of bits, and characters to a private list of bytes, which it can "export" upon completion, returning a byte array that can be written to the binary file. The class holds an 8 long array of integers to represent the current byte, and this is added to the byte array when it is filled (when the index used to write to it reaches 8). This is done by converting it into a byte using bitwise operations (shifting each bit to its position, then performing an OR operation with the byte being constructed).
+
+When all desired bits have been written to the file, it is likely that this is not at the end of a byte, and so the remaining bits are left as 0, since you can only write to files in bytes. However, the number of such bits need to be stored in some form, so it is clear which bits to ignore when decoding. Therefore, bits 1-3 of the first byte are kept clear for writing a 3-bit integer between 0-7 (the possible number of trailing bits) at the end. Note that bit 0 is used to indicate whether the file is being compressed in the first place. This is why the index begins at 4 rather than 0 for the first bit.
+
+\FloatBarrier
+\lstinputlisting[
+    language=sh,
+    caption={Pseudocode for the ByteReader class},
+    label={ByteReaderPseudocode},
+]{code/ByteReader.pseudocode}
+\FloatBarrier
+
+This ByteReader class acts as the opposite of the ByteMaker: it takes in a byte array when being instantiated, and provides methods for reading the next bit and character (8 bits). The constructor returns a boolean value indicating whether the first bit is 0 or 1, and so whether compression was used on the file. It also uses the next 3 bits to determine the number of trailing 0s at the end of the file, so they can be ignored when reading. This is indicated by the Read method returning -1 once those characters have been reached.
+
+The Read method uses bitwise operations to get the bit at a certain index from the byte at index 0 of the list. Index 0 is always used as the Update method removes bytes that have already been fully read from the start of the list. The right shift operation places the desired bit at the end of the byte, and performing an AND with 1 returns the value of the last bit of the right-shifted byte, as desired.
+
+\subsubsection{UML Class Diagram}
+
+Figure \ref{HuffmanClassDiagram} shows a UML class diagram depicting my design for this component of the program. No inheritance, composition, or aggregation is used, but the HuffmanNode constructor and the ByteMaker Add method show polymorphism by having overloads.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\linewidth]{images/HuffmanUMLDiagram.png}
+    \caption{A UML class diagram for the compression program}
+    \label{HuffmanClassDiagram}
+\end{figure}
+
+\subsubsection{The solution}
+
+\lstinputlisting[
+    caption={Selector program for compression},
+    label={HuffmanProgramCs},
+]{code/Program.cs}
+
+\lstinputlisting[
+    caption={Code for the HuffmanNode class},
+    label={HuffmanNodeCs},
+]{code/HuffmanNode.cs}
+
+\lstinputlisting[
+    caption={Code for the ByteMaker class},
+    label={ByteMakerCs},
+]{code/ByteMaker.cs}
+
+\lstinputlisting[
+    caption={Code for the ByteReader class},
+    label={ByteReaderCs},
+]{code/ByteReader.cs}
+
+\lstinputlisting[
+    caption={Code for the HuffmanEncoder class},
+    label={HuffmanEncoderCs},
+]{code/HuffmanEncoder.cs}
+
+\lstinputlisting[
+    caption={Code for the HuffmanDecoder class},
+    label={HuffmanDecoderCs},
+]{code/HuffmanDecoder.cs}
+
+\end{document}

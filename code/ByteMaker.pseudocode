@@ -1,0 +1,66 @@
+CLASS ByteMaker
+	PRIVATE INTEGER ARRAY _bits
+	PRIVATE INTEGER _bitIndex
+	PRIVATE INTEGER _trailingZeros
+
+	PRIVATE BYTE LIST _bytes
+
+	PUBLIC CONSTRUCTOR ByteMaker (BOOLEAN isCompressed)
+		_bitIndex <- 4
+		IF (isCompressed = TRUE) THEN
+			_bits <- [1, 0, 0, 0, 0, 0, 0, 0]
+		ELSE
+			_bits <- [0, 0, 0, 0, 0, 0, 0, 0]
+		ENDIF
+	ENDCONSTRUCTOR
+
+	PUBLIC SUBROUTINE Add (INTEGER bit)
+		IF (bit <> 1 AND bit <> 0) THEN
+			RETURN
+		ENDIF
+
+		_bits[_bitIndex] <- bit
+		_bitIndex <- _bitIndex + 1
+
+		IF (_bitIndex = 8) THEN
+			updateByte()
+		ENDIF
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE Add (INTEGER LIST bits)
+		FOR (INTEGER bit IN bits)
+			Add(bit)
+		ENDFOR
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE Add (CHARACTER char)
+		BYTE charByte <- char TO BYTE
+		FOR (INTEGER i <- 7 TO 0 STEP -1)
+			INTEGER bit <- (RIGHTSHIFT charByte i) AND 1
+
+			Add(bit)
+		ENDFOR
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE Export()
+		updateByte()
+
+		BYTE trailingZerosByte <- _trailingZeros TO BYTE
+		_bytes[0] <- _bytes[0] OR (LEFTSHIFT trailingZerosByte 4)
+
+		RETURN (_bytes TO ARRAY)
+	ENDSUBROUTINE
+
+	PRIVATE SUBROUTINE updateByte()
+		BYTE newByte
+		FOR (INTEGER i <- 0 TO 7 STEP 1)
+			BYTE mergeByte <- (LEFTSHIFT _bits[i] 7-i) TO BYTE
+			newByte <- newByte OR mergeByte
+		ENDFOR
+		ADD newByte TO _bytes
+
+		_bits <- [0, 0, 0, 0, 0, 0, 0, 0]
+		_trailingZeros <- 8 - _bitIndex
+		_bitIndex <- 0
+	ENDSUBROUTINE
+ENDCLASS

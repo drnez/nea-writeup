@@ -1,0 +1,60 @@
+CLASS ByteReader
+	PRIVATE BYTE LIST _bytes
+	PRIVATE INTEGER _bitIndex
+	PRIVATE INTEGER _trailingNum
+
+	PUBLIC CONSTRUCTOR ByteReader (BYTE ARRAY bytes)
+		_bytes <- bytes TO LIST
+		_bitIndex <- 0
+
+		INTEGER firstBit <- Read()
+		INTEGER a <- Read()
+		INTEGER b <- Read()
+		INTEGER c <- Read()
+		_trailingNum <- 4*a + 2*b + c
+
+		IF (firstBit = 0) THEN
+			RETURN FALSE
+		ELSE
+			RETURN TRUE
+		ENDIF
+	ENDCONSTRUCTOR
+
+	PUBLIC SUBROUTINE Read()
+		IF (LENGTH _bytes = 0) THEN
+			RETURN -1
+		ENDIF
+		IF (LENGTH _bytes = 1 AND _bitIndex >= 8 - _trailingNum) THEN
+			RETURN -1
+		ENDIF
+
+		INTEGER bit <- (RIGHTSHIFT _bytes[0] (7 - _bitIndex)) AND 1
+		_bitIndex <- _bitIndex + 1
+
+		RETURN bit
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE ReadChar()
+		BYTE nextByte <- 0
+
+		FOR (INTEGER i <- 0 TO 7 STEP 1)
+			INTEGER bit <- Read()
+			IF (bit = -1) THEN
+				RETURN ''
+			ELSE IF (bit = 1) THEN
+				nextByte <- nextByte OR (LEFTSHIFT 1 (7-i))
+			ENDIF
+		ENDFOR
+
+		RETURN (nextByte TO CHARACTER)
+	ENDSUBROUTINE
+
+	PRIVATE SUBROUTINE Update()
+		IF (_bitIndex <> 8) THEN
+			RETURN
+		ENDIF
+
+		REMOVE INDEX 0 FROM _bytes
+		_bitIndex <- 0
+	ENDSUBROUTINE
+ENDCLASS
