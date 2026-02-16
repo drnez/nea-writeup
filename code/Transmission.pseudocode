@@ -1,0 +1,37 @@
+CLASS Transmission
+	PUBLIC SUBROUTINE Serialise (BYTE ARRAY bytes)
+		BYTE ARRAY[4] bytesLengthBytes <- (LENGTH OF bytes) TO BYTE ARRAY
+
+		BYTE ARRAY data <- bytesLengthBytes + bytes
+
+		RETURN data
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE Serialise (BIG INTEGER bigInt)
+		BYTE ARRAY bigIntBytes <- bigInt TO BYTE ARRAY
+
+		RETURN Serialise(bigIntBytes)
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE Serialise (STRING data)
+		RETURN Serialise(data TO BYTE ARRAY)
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE ReadByteArray (NETWORK STREAM stream)
+		INTEGER bytesLength <- ReadBytes(stream, 4) TO INTEGER
+
+		RETURN ReadBytes(stream, bytesLength)
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE ReadBigInt (NETWORK STREAM stream)
+		RETURN ReadByteArray(stream) TO BIG INTEGER
+	ENDSUBROUTINE
+
+	public static byte[] ReadBytes(Stream stream, int length)
+		BYTE ARRAY[length] bytes
+
+		bytes <- READ length FROM stream
+
+		RETURN bytes
+	ENDSUBROUTINE
+ENDCLASS

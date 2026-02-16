@@ -1,0 +1,100 @@
+ABSTRACT CLASS Transferer
+	PROTECTED CRYPTO STREAM _cryptoStream
+
+    PUBLIC CONSTRUCTOR Transferer (NETWORK STREAM stream, AES ENCRYPTOR aes, CRYPTO STREAM MODE mode)
+		SET aes PADDING MODE TO ZEROS
+
+		IF (mode = WRITE) THEN
+			_cryptoStream <- NEW CRYPTO STREAM(stream, aes ENCRYPTOR, mode, LEAVE OPEN)
+		ELSE
+			_cryptoStream <- NEW CRYPTO STREAM(stream, aes DECRYPTOR, mode, LEAVE OPEN)
+		ENDIF
+	ENDCONSTRUCTOR
+ENDCLASS
+
+CLASS FileSender FROM Transferer
+    PUBLIC CONSTRUCTOR FileSender (NETWORK STREAM stream, AES ENCYRPTOR aes)
+		CALL BASE(stream, aes, WRITE)
+	ENDCONSTRUCTOR
+
+	PUBLIC SUBROUTINE SendFile (BYTE ARRAY fileBytes, STRING fileName)
+		BYTE ARRAY hashBytes <- Hash(fileBytes)
+
+		WRITE Serialise(hashBytes) TO _cryptoStream
+
+		WRITE Serialise(fileName) TO _cryptoStream
+
+		SendData(fileBytes)
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE SendData (STRING data)
+		BYTE ARRAY bytes <- data TO BYTE ARRAY
+
+		BYTE ARRAY hashBytes <- HASH(bytes)
+
+		WRITE Serialise(hashBytes) TO _cryptoStream
+
+		SendData(bytes)
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE SendInt (INTEGER data)
+		BYTE ARRAY bytes[4] <- data TO BYTE ARRAY
+
+		SendData(bytes)
+	ENDSUBROUTINE
+
+	PRIVATE SUBROUTINE SendData (BYTE ARRAY bytes)
+		WRITE Serialise(bytes) TO _cryptoStream
+		FLUSH _cryptoStream
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE Finish()
+		FLUSH FINAL BLOCK OF _cryptoStream
+	ENDSUBROUTINE
+ENDCLASS
+
+CLASS FileReceiver FROM Transferer
+	PUBLIC CONSTRUCTOR FileReceiver (NETWORK STREAM stream, AES aes)
+		CALL BASE(stream, aes, READ)
+	ENDCONSTRUCTOR
+
+	PUBLIC SUBROUTINE GetFile (STRING location, BOOLEAN decompress)
+		BYTE ARRAY hashBytes <- ReadByteArray(_cryptoStream)
+		BYTE ARRAY nameBytes <- ReadByteArray(_cryptoStream)
+		BYTE ARRAY fileBytes <- ReadByteArray(_cryptoStream)
+
+		IF (VerifyHash(fileBytes, hashBytes) = TRUE) THEN
+			STRING name <- nameBytes TO STRING
+			STRING filePath <- location + name
+
+			CREATE DIRECTORY AT filePath
+
+			IF (decompress = TRUE AND LAST ELEMENT OF (SPLIT name BY '.') = "huff") THEN
+				STRING outputPath <- SUBSTRING(filePath, 0, LENGTH OF filePath - 5)
+
+				HuffmanDecoder.WriteRawFile(fileBytes, outputPath)
+			ELSE
+				WRITE fileBytes TO FILE filePath
+			ENDIF
+		ELSE
+			OUTPUT "Corrupted transmission!"
+		ENDIF
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE GetString()
+		BYTE ARRAY hashBytes <- ReadByteArray(_cryptoStream)
+		BYTE ARRAY stringBytes <- ReadByteArray(_cryptoStream)
+
+		IF (VerifyHash(stringBytes, hashBytes) = TRUE) THEN
+			RETURN stringBytes TO STRING
+		ENDIF
+
+		RETURN ""
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE GetInt()
+		BYTE ARRAY intBytes <- ReadByteArray(_cryptoStream)
+
+		RETURN intBytes TO INTEGER
+	ENDSUBROUTINE
+ENDCLASS

@@ -1,0 +1,19 @@
+PUBLIC SUBROUTINE Hash (BYTE ARRAY messageBytes)
+	BYTE ARRAY hashBytes
+
+	hashBytes <- GET HASH OF messageBytes
+
+	RETURN hashBytes
+ENDSUBROUTINE
+
+PUBLIC SUBROUTINE VerifyHash (BYTE ARRAY messageBytes, BYTE ARRAY hashBytes)
+	BYTE ARRAY messageHash <- Hash(messageBytes)
+
+	FOR (INTEGER i <- 0 TO (LENGTH OF messageHash - 1) STEP 1)
+		IF (messageHash[i] <> hashBytes[i]) THEN
+			RETURN FALSE
+		ENDIF
+	ENDFOR
+
+	RETURN TRUE
+ENDSUBROUTINE

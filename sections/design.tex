@@ -22,17 +22,113 @@ These flowcharts include implementation details, such as how dictionaries, stack
     \label{GenericHuffmanEncoding}
 \end{figure}
 
+\clearpage
+
+In this encoding procedure, the recursive subroutine SearchTree is called. Figure \ref{SearchTree} provides a flowchart showing its function.
+
+\begin{figure}[ht]
+    \includegraphics[width=0.5\linewidth]{images/SearchTree.pdf}
+    \centering
+    \caption{A flowchart depicting my SearchTree procedure}
+    \label{SearchTree}
+\end{figure}
+
+It performs a post-order depth first search of the binary Huffman tree created. By searching the tree in this way, when each node is visited it is written to the compressed file, since the tree needs to be re-read by the decryption program to allow the file to be decrypted. If a leaf node is read, the character belonging to the node is written to the file (in 8-bit Unicode) after a 1 bit. If the node is not a leaf (and so does not contain a character), this is denoted by a 0 being written to the file. This is sufficient for the decoder to fully reconstruct the tree.
+
+The procedure also links each character to its Huffman encoding as the tree is searched (going left in the tree adds a 0 to the encoding, going right adds a 1). This is used later in the program to write each character's Huffman encoding to the compressed file. Filling the dictionary in this procedure means that another search of the tree is not needed, making the code quicker to run.
+
+The code for this procedure can be found in Listing \ref{SearchTreeCode}.
+
+\FloatBarrier
+\lstinputlisting[
+    caption={Code for the SearchTree procedure},
+    label={SearchTreeCode}
+]{code/SearchTreeCode.cs}
+\FloatBarrier
+
+This tree that is searched in the above procedure is created using a priority queue to continually merge trees, until just one is left. The snippet of the flowchart that relates to this section of the code can be found in Figure \ref{HuffmanPriorityQueueFlowchart}.
+
+\begin{figure}[hb]
+    \includegraphics[width=0.47\linewidth]{images/HuffmanPriorityQueue.pdf}
+    \centering
+    \caption{A flowchart depicting the creation of the Huffman tree}
+    \label{HuffmanPriorityQueueFlowchart}
+\end{figure}
+
+First, nodes are created for each character, and these become trees of size 1. They are placed in a priority queue such that the nodes with the greatest frequencies are last. Then, the nodes with the two lowest frequencies are continually dequeued, and made children of a new node, which is enqueued onto the priority queue. Since this is not a leaf node, it does not contain a character. This node's frequency is equal to the sum of the frequencies of its children. The less frequent node is made the left child of the tree. This repeats until just one tree remains, which is the final Huffman tree, which can be used to generate encodings for each character.
+
+The code for this section can be found in Listing \ref{HuffmanPriorityQueueCode}.
+
+\FloatBarrier
+\lstinputlisting[
+    caption={Code for creating the Huffman tree},
+    label={HuffmanPriorityQueueCode}
+]{code/HuffmanPriorityQueueCode.cs}
+\FloatBarrier
+
+The implementation here is recursive, with the recursive case passing the new priority queue back to the procedure (to merge again), and the base case being reached when only one tree remains in the priority queue.
+
+\clearpage
+
 \begin{figure}
     \includegraphics[width=\linewidth]{images/HuffmanDecoding.jpg}
     \caption{A flowchart depicting my Huffman decoding procedure}
     \label{GenericHuffmanDecoding}
 \end{figure}
 
+\clearpage
+
+In this decoding procedure, the GenerateEncodings procedure recursively calls itself to perform a post-order depth-first search of the Huffman tree to fill a dictionary mapping Huffman encodings to the characters they represent. This works identically to the SearchTree procedure in the encoding procedure, just without writing anything to a file, and with the dictionary direction reversed (in the encoding procedure, characters are linked to their Huffman encoding).
+
+A stack is used to read the Huffman tree representation from the file, and store it in the program as a tree. Figure \ref{HuffmanStackFlowchart} is a snippet of the main decoding flowchart that relates to this.
+
+\begin{figure}[ht]
+    \includegraphics[width=\linewidth]{images/HuffmanStack.pdf}
+    \caption{A flowchart depicting the reconstruction of the Huffman tree}
+    \label{HuffmanStackFlowchart}
+\end{figure}
+
+The start of the compressed file contains an encoding of the Huffman tree used. This was created, and written, in the encoding procedure, with a post-order depth-first tree search. Here, the tree is reconstructed.
+
+If a 1 bit is read - indicating a character comes next - the next 8 bits are read and converted into a Unicode character, then pushed onto the stack as a new node (which is in effect a tree of size 1).
+
+Otherwise, if a 0 bit is read, one of two options occurs. If the stack is of size 1, this indicates that the zero read represented the end of the tree encoding, and the program pop's the one tree in the stack, and uses that as the Huffman tree to decode the text in the file. Otherwise, the 0 indicates a non-leaf node, so the top two trees are popped from the stack, and made children of a new node which is pushed back onto the stack. The first tree popped becomes the right child.
+
+The code for this algorithm can be found in Listing \ref{HuffmanStackCode}.
+
+\clearpage
+
+\FloatBarrier
+\lstinputlisting[
+    caption={Code for the reconstructing the Huffman tree},
+    label={HuffmanStackCode},
+]{code/HuffmanStackCode.cs}
+\FloatBarrier
+
+To represent the binary Huffman tree, I made a dedicated HuffmanNode class. Each node is linked to any children it has, so a tree is just represented as its top-node. Leaf nodes also store what character they represent. This class shows polymorphism by having two constructors taking different arguments due to the different information available when making a leaf and non-leaf node.
+
+The pseudocode for this can be found in Listing \ref{HuffmanNodePseudocode}, and the code in Listing \ref{HuffmanNodeCode}.
+
+\FloatBarrier
+\lstinputlisting[
+    language={sh},
+    caption={Pseudocode for the HuffmanNode class},
+    label={HuffmanNodePseudocode},
+]{code/HuffmanNode.pseudocode}
+\FloatBarrier
+
+\FloatBarrier
+\lstinputlisting[
+    caption={Code for the HuffmanNode class},
+    label={HuffmanNodeCode},
+]{code/HuffmanNode.cs}
+\FloatBarrier
+
 \subsubsection{Reading and Writing Bytes}
 
-These implementations assume writing bits to, and reading bits from, files is a trivial task. However, this proved to be quite challenging, since one can only write to, and read from, files one byte at a time in C\#, so I needed to implement additional helper methods for this.
+These flowchart implementations above assumed that writing bits to, and reading bits from, files is a trivial task. However, this proved to be quite challenging, since one can only write to, and read from, files one byte at a time in C\#. Therefore, I needed to implement additional helper methods for this.
 
-Therefore, I constructed pseudocode for ByteMaker (Listing \ref{ByteMakerPseudocode}) and ByteReader (Listing \ref{ByteReaderPseudocode}) classes, which respectively allow writing to and reading from binary files.
+I constructed pseudocode for ByteMaker (Listing \ref{ByteMakerPseudocode}) and ByteReader (Listing \ref{ByteReaderPseudocode}) classes, which respectively allow writing to and reading from binary files.
 
 \FloatBarrier
 \lstinputlisting[
@@ -46,6 +142,8 @@ The ByteMaker provides methods to write single bits (as integers 0/1), lists of 
 
 When all desired bits have been written to the file, it is likely that this is not at the end of a byte, and so the remaining bits are left as 0, since you can only write to files in bytes. However, the number of such bits need to be stored in some form, so it is clear which bits to ignore when decoding. Therefore, bits 1-3 of the first byte are kept clear for writing a 3-bit integer between 0-7 (the possible number of trailing bits) at the end. Note that bit 0 is used to indicate whether the file is being compressed in the first place. This is why the index begins at 4 rather than 0 for the first bit.
 
+\bigskip
+
 \FloatBarrier
 \lstinputlisting[
     language=sh,
@@ -58,28 +156,7 @@ This ByteReader class acts as the opposite of the ByteMaker: it takes in a byte 
 
 The Read method uses bitwise operations to get the bit at a certain index from the byte at index 0 of the list. Index 0 is always used as the Update method removes bytes that have already been fully read from the start of the list. The right shift operation places the desired bit at the end of the byte, and performing an AND with 1 returns the value of the last bit of the right-shifted byte, as desired.
 
-\subsubsection{UML Class Diagram}
-
-Figure \ref{HuffmanClassDiagram} shows a UML class diagram depicting my design for this component of the program. No inheritance, composition, or aggregation is used, but the HuffmanNode constructor and the ByteMaker Add method show polymorphism by having overloads.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.85\linewidth]{images/HuffmanUMLDiagram.png}
-    \caption{A UML class diagram for the compression program}
-    \label{HuffmanClassDiagram}
-\end{figure}
-
-\subsubsection{The solution}
-
-\lstinputlisting[
-    caption={Selector program for compression},
-    label={HuffmanProgramCs},
-]{code/Program.cs}
-
-\lstinputlisting[
-    caption={Code for the HuffmanNode class},
-    label={HuffmanNodeCs},
-]{code/HuffmanNode.cs}
+The code for the ByteMaker and ByteReader classes can be found in Listings \ref{ByteMakerCs} and \ref{ByteReaderCs} respectively.
 
 \lstinputlisting[
     caption={Code for the ByteMaker class},
@@ -91,14 +168,167 @@ Figure \ref{HuffmanClassDiagram} shows a UML class diagram depicting my design f
     label={ByteReaderCs},
 ]{code/ByteReader.cs}
 
-\lstinputlisting[
-    caption={Code for the HuffmanEncoder class},
-    label={HuffmanEncoderCs},
-]{code/HuffmanEncoder.cs}
+\subsubsection{UML Class Diagram}
 
+Figure \ref{HuffmanClassDiagram} shows a UML class diagram depicting my design for this component of the program. No inheritance, composition, or aggregation is used, but the HuffmanNode constructor and the ByteMaker Add method show polymorphism by having overloads.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.85\linewidth]{images/HuffmanUMLDiagram.png}
+    \caption{A UML class diagram for the compression program}
+    \label{HuffmanClassDiagram}
+\end{figure}
+
+\clearpage
+\pagebreak
+
+\subsection{RSA Key Exchange}
+
+In my Analysis (Section \ref{KeyExchangeSSS}), I decided that I will use the RSA algorithm for key exchange. This asymmetric encryption algorithm will be used to share a symmetric key between the client and server, to be used for any further communications between the devices.
+
+From the Analysis, the following procedure can be followed to generate RSA keys:
+\begin{enumerate}
+    \item The receiver generates two large primes, $p,q$, then computes their product, $n = pq$.
+    \item Euler’s Totient function, $\phi(pq) = (p-1)(q-1)$, is applied to $n$.
+    \item An encryption exponent, $e$, is selected such that $1 < e < \phi(n)$, and $e$ is relatively prime with $\phi(n)$. Note that $a,b \in \mathbb{Z}^+$ are relatively prime $\iff \nexists\ x \in \mathbb{Z} : x > 1,\ x\,|\,a,\ x\,|\,b$.
+    \item A decryption exponent, $d$, is calculated such that $de = 1 \pmod{\phi(n)}$. The extended Euclidian algorithm provides a method for this.
+    \item The public key is formed from $(n,e)$ and the private key $(n,d)$. The receiver sends their public key only to the sender. 
+    \item The encrypted ciphertext, $C$, is calculated through $C = M^e \pmod n$, where $M$ is some numerical representation of the message. 
+    \item The ciphertext is decrypted into the plaintext message, $M$, by the calculation $M = C^d \pmod n$.
+\end{enumerate}
+
+The first prerequisite to implementing the RSA algorithm is a method to generate very large (512 bit) prime numbers. Since it is intractable to generate random very large prime numbers that are guaranteed to be prime, the Miller-Rabin primality test is very often used. This is an algorithm that tests whether a large prime number is probably prime. Wikipedia provides a description of this algorithm \cite{MillerRabinWiki}.
+
+For each base tested, if this algorithm labels an integer composite, it must be composite, but it has a $\frac{1}{4}$ probability of incorrectly labelling the integer prime. However, this means that running the algorithm $n$ times (with $n$ bases) reduces this probability of incorrectly labelling a composite number prime every time (since if it ever labels it composite then it must be composite) to $4^{-n}$. Running this $40$ times, the probability of it giving a wrong result is $4^{-40}$, which is exceedingly unlikely.
+
+Figure \ref{MillerRabinFlowchart} displays a flowchart demonstrating the steps this algorithm takes.
+
+\begin{figure}[ht]
+    \includegraphics[width=\linewidth]{images/MillerRabin.pdf}
+    \caption{A flowchart for the Miller-Rabin algorithm}
+    \label{MillerRabinFlowchart}
+\end{figure}
+
+Listing \ref{MillerRabinCode} contains the code for this algorithm.
+
+\FloatBarrier
 \lstinputlisting[
-    caption={Code for the HuffmanDecoder class},
-    label={HuffmanDecoderCs},
-]{code/HuffmanDecoder.cs}
+    caption={Code for the MillerRabin algorithm},
+    label={MillerRabinCode}
+]{code/MillerRabinCode.cs}
+\FloatBarrier
+
+This is used to generate large primes by continually testing randomly generated primes until one passes the test. Large primes (512 bit in this case) are generated by filling a byte array (64 long in this case) with random bits, ensuring the most significant bit is 1, so the prime is actually large enough, and the least significant bit is also 1, so the number is not a multiple of two (since they are clearly not prime). A check is also performed to ensure that for the composite $n$ formed by $n=pq$, where $p,q$ are primes being generated here, $\phi(n)$ is relatively prime with the encryption exponent $e$, which is chosen as 65537 in this case, for its favourable properties.
+
+A flowchart for this procedure can be found in Figure \ref{GenerateRSAPrimeFlowchart}, and code for it in Listing \ref{GenerateRSAPrimeCode}.
+
+\begin{figure}[ht]
+    \includegraphics[width=0.5\linewidth]{images/GenerateRSAPrime.pdf}
+    \centering
+    \caption{A flowchart for the procedure to generate an RSA prime}
+    \label{GenerateRSAPrimeFlowchart}
+\end{figure}
+
+\FloatBarrier
+\lstinputlisting[
+    caption={Code for the procedure to generate an RSA prime},
+    label={GenerateRSAPrimeCode}
+]{code/GenerateRSAPrimeCode.cs}
+\FloatBarrier
+
+The final major algorithm needed in the implementation of RSA is the Extended Euclidean Algorithm, which is used to generate the decryption exponent, $d$, such that $de = 1 \pmod{\phi(n)}$. Wikipedia provides a mathematical description of this algorithm \cite{EEAWiki}. Figure \ref{EEAFlowchart} provides a flowchart representing the algorithm for this, and Listing \ref{EEACode} shows the code for this procedure.
+
+\begin{figure}[ht]
+    \includegraphics[width=\linewidth]{images/EEA.pdf}
+    \centering
+    \caption{A flowchart for the Extended Euclidean Algorithm}
+    \label{EEAFlowchart}
+\end{figure}
+
+\FloatBarrier
+\lstinputlisting[
+    caption={Code for the Extended Euclidean Algorithm},
+    label={EEACode}
+]{code/EEACode.cs}
+\FloatBarrier
+
+All that is left now is to put this all together, and generate the public and private RSA keys. The public key consists of $(n,e)$, and the private key $(n,d)$, so a procedure is needed to generate the tuple $(n,e,d)$. Figure \ref{GenerateRSAKeyFlowchart} provides a flowchart for this, and my implementation can be seen in Listing \ref{GenerateRSAKeyCode}.
+
+\begin{figure}[ht]
+    \includegraphics[width=\linewidth]{images/GenerateRSAKeys.pdf}
+    \centering
+    \caption{A flowchart for the procedure to generate RSA keys}
+    \label{GenerateRSAKeyFlowchart}
+\end{figure}
+
+\FloatBarrier
+\lstinputlisting[
+    caption={Code for the procedure to generate RSA keys},
+    label={GenerateRSAKeyCode}
+]{code/GenerateKeysCode.cs}
+\FloatBarrier
+
+\subsection{Verifying the integrity of communications}
+
+To verify the integrity of the files transmitted, as described in the Analysis (Section \ref{VerifyingIntegritySSS}), I will compute a hash of the data being sent, and transmit the hash of the message before the rest of the message. The recipient can then compute the hash of the message itself, and compare that to the hash it received. If they match, then they can be confident that the message was not corrupted in transmission.
+
+As decided in the Analysis, I will use the popular SHA-256 algorithm for this, which generates a fixed size 256-bit hash. Listing \ref{HashingPseudocode} contains pseudocode for the procedures to generate a hash, and to verify one.
+
+\FloatBarrier
+\lstinputlisting[
+    language={sh},
+    caption={Pseudocode for the hashing procedures},
+    label={HashingPseudocode}
+]{code/Hashing.pseudocode}
+\FloatBarrier
+
+The verification subroutine checks each byte in the byte arrays representing the hash computed and hash received, and returns false if any do not match exactly. Code for this can be found in Listing \ref{HashingCode}.
+
+\FloatBarrier
+\lstinputlisting[
+    caption={Code for the hashing procedures},
+    label={HashingCode}
+]{code/Hashing.cs}
+\FloatBarrier
+
+\subsection{Transmission procedures}
+
+In order to send messages through a network stream, at the simplest level, there must be a method for the recipient to know how long the data being sent is. I can achieve this by encoding the number of bytes to expect in the first 4 bytes of each transmission. As such, the receiver knows to read the first 4 bytes (which will be an integer $n$), read the next $n$ bytes in whatever format it is expecting, and then repeat this procedure for the rest of the stream, knowing that it is a new transmission.
+
+This requires some serialisation and "de-serialisation" subroutines to handle adding the length of the message to the start of it, and reading exactly as many bytes as are indicated. Listing \ref{TransmissionPseudocode} provides pseudocode for these methods, and Listing \ref{TransmissionCode} provides the code for it.
+
+\FloatBarrier
+\lstinputlisting[
+    language={sh},
+    caption={Pseudocode for the serialisation procedures},
+    label={TransmissionPseudocode}
+]{code/Transmission.pseudocode}
+\FloatBarrier
+
+\FloatBarrier
+\lstinputlisting[
+    caption={Code for the serialisation procedures},
+    label={TransmissionCode}
+]{code/Transmission.cs}
+\FloatBarrier
+
+Having established an encrypted AES stream (using the CryptoStream class in C\#), some helper methods are needed to send and receive various data types. I designed FileSender and FileReciever classes for this purpose. These both inherit from an abstract Transferer class, which stores the common CryptoStream attribute, and a common constructor for the two derived classes. Using classes, rather than just procedures, is beneficial here since, as well as grouping together the related subroutines cleanly, the CryptoStream can be passed in just once upon instantiation of an object. It is important that this is not re-created, since that would interrupt the communication stream. Pseudocode for these classes can be found in Listing \ref{TransfererPseudocode}, and the code in Listing \ref{TransfererCode}.
+
+\FloatBarrier
+\lstinputlisting[
+    language={sh},
+    caption={Pseudocode for the transfer classes},
+    label={TransfererPseudocode}
+]{code/Transferer.pseudocode}
+\FloatBarrier
+
+\FloatBarrier
+\lstinputlisting[
+    caption={Code for the transfer classes},
+    label={TransfererCode}
+]{code/Transferer.cs}
+\FloatBarrier
+
+\subsection{Full UML Class Diagram}
 
 \end{document}

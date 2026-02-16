@@ -152,7 +152,7 @@ This is one of the largest components of the program, which is used for any and 
     \item The communications should be verified to be correct, using a method to check that there has not been any corruption during data transfer.
 \end{enumerate}
 
-\subsubsection{Key Exchange}
+\subsubsection{Key Exchange} \label{KeyExchangeSSS}
 
 The three algorithms I will consider for this are RSA, Diffie-Hellman Key Exchange, and Elliptic Curve Cryptography.
 
@@ -162,28 +162,32 @@ While elliptic curve cryptography can provide equivalent security with much smal
 
 I will now consider the basic implementation details of the RSA and Diffie-Hellman algorithms to aid in my decision-making.
 
-\paragraph{RSA}
-
+\bigskip
+\textbf{RSA}
+ 
+The website \cite{RSAgfg} contains details about the mathematics of the RSA algorithm, and how it can be implemented. From this, I have generated the following steps that are taken in the RSA algorithm.
 \begin{enumerate}
     \item The receiver generates two large primes, $p,q$, then computes their product, $n = pq$.
-    \item Euler’s Totient function, $\phi(p,q) = (p-1)(q-1)$, is applied to $n$.
+    \item Euler’s Totient function, $\phi(pq) = (p-1)(q-1)$, is applied to $n$.
     \item An encryption exponent, $e$, is selected such that $1 < e < \phi(n)$, and $e$ is relatively prime with $\phi(n)$. Note that $a,b \in \mathbb{Z}^+$ are relatively prime $\iff \nexists\ x \in \mathbb{Z} : x > 1,\ x\,|\,a,\ x\,|\,b$.
     \item A decryption exponent, $d$, is calculated such that $de = 1 \pmod{\phi(n)}$. The extended Euclidian algorithm provides a method for this.
     \item The public key is formed from $(n,e)$ and the private key $(n,d)$. The receiver sends their public key only to the sender. 
     \item The encrypted ciphertext, $C$, is calculated through $C = M^e \pmod n$, where $M$ is some numerical representation of the message. 
-    \item The ciphertext is decrypted into the plaintext message, $M$, by the calculation $M = C^d \pmod n$. \cite{RSAgfg}
+    \item The ciphertext is decrypted into the plaintext message, $M$, by the calculation $M = C^d \pmod n$.
 \end{enumerate}
 
 Now, the sender encrypts their message with the receiver’s public key, and then only the receiver can decrypt it since only they have the private key. Computing $\phi(n)$ is infeasible without knowing the primes, $p,q$, that $n$ is a product of, and this is also infeasible to compute due to the large size of the primes. This means no other party can calculate the private key from the public key.
 
-\paragraph{Diffie-Hellman key exchange}
+\bigskip
+\textbf{Diffie-Hellman key exchange}
 
+Page 84 of the following lecture notes \cite{OxCompSecNotes} contains a brief description of the mathematics behind the Diffie-Hellman key exchange. Below I describe the key steps in this algorithm in my own words.
 \begin{enumerate}
     \item Either the sender or the receiver randomly generates a large prime, $p$, and a large number, $g$, and sends these to the other. 
     \item The sender and receiver then generate random secrets $s_a$ and $s_b$ respectively, for $s_a,s_b \in \mathbb{Z}^+$. 
     \item The sender sends $a = g^{s_a}\pmod p$ to the receiver, who computes $a^{s_b} = g^{s_as_b}\pmod p$. 
     \item The receiver sends $b = g^{s_b}\pmod p$ to the receiver, who computes $b^{s_a} = g^{s_as_b}\pmod p$. 
-    \item Now, they both have the shared secret, $S = g^{s_as_b}\pmod p$, which can be used to establish a shared key. \cite{OxCompSecNotes}
+    \item Now, they both have the shared secret, $S = g^{s_as_b}\pmod p$, which can be used to establish a shared key.
 \end{enumerate}
 
 An attacker would have access to $g,\ p,\ g^{s_a}\pmod p,\ g^{s_b}\pmod p$, and need to compute $S = g^{s_as_b}\pmod p$ to compromise the conversation. A quick solution to the Discrete Logarithm Problem would imply a quick solution to this problem, but one is not currently known. This is central to the security of this key exchange, similarly to the prime factorisation problem for RSA. 
@@ -200,7 +204,7 @@ The Caesar cipher can be immediately eliminated, since it is trivial to break wi
 
 However, AES has been used as the basis of internet security for decades, and as such there has been great research into verifying its security, and ensuring implementations do not contain vulnerabilities. Therefore, I will use this for my symmetric encryption needs.
 
-\subsubsection{Verifying the Integrity of Communications}
+\subsubsection{Verifying the Integrity of Communications} \label{VerifyingIntegritySSS}
 
 It is necessary to ensure all communications have arrived at the desired recipient uncorrupted, exactly as they were sent. Therefore, some method must be used to ensure that this is the case. 
 

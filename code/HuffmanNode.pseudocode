@@ -1,0 +1,43 @@
+CLASS HuffmanNode
+	PRIVATE CHARACTER _character
+	PRIVATE INTEGER _frequency
+	PRIVATE HuffmanNode _left
+	PRIVATE HuffmanNode _right
+
+	PRIVATE BOOLEAN _hasCharacter
+
+	PUBLIC CONSTRUCTOR HuffmanNode (CHARACTER char, INTEGER frequency)
+		_character <- char
+		_frequency <- frequency
+
+		_hasCharacter <- TRUE
+	ENDCONSTRUCTOR
+
+	PUBLIC CONSTRUCTOR HuffmanNode (HuffmanNode left, HuffmanNode right, INTEGER frequency)
+		_left <- left
+		_right <- right
+		_frequency <- frequency
+
+		_hasCharacter <- FALSE
+	ENDCONSTRUCTOR
+
+	PUBLIC SUBROUTINE GetFrequency()
+		RETURN _frequency
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE HuffmanNode GetLeft()
+		RETURN _left
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE HuffmanNode GetRight()
+		RETURN _right
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE bool HasCharacter()
+		RETURN _hasCharacter
+	ENDSUBROUTINE
+
+	PUBLIC SUBROUTINE char GetCharacter()
+		RETURN _character
+	ENDSUBROUTINE
+ENDCLASS
