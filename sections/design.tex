@@ -329,6 +329,28 @@ Having established an encrypted AES stream (using the CryptoStream class in C\#)
 ]{code/Transferer.cs}
 \FloatBarrier
 
+\subsubsection{UML Class Diagram}
+
+A UML class diagram for the above classes can be seen in Figure \ref{TransfererUML}, demonstrating the inheritance from the base Transferer class.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/TransfererUML.png}
+    \caption{A UML class diagram for the Transferer, FileSender, and FileReceiver classes}
+    \label{TransfererUML}
+\end{figure}
+
 \subsection{Full UML Class Diagram}
+
+Figure \ref{FullUML} shows a UML class diagram for my design of the whole program. Polymorphism is often shown through overloaded methods, and there are two derived classes. However, often, classes are static and simply used for the grouping of related methods.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{images/FullUML.png}
+    \caption{A UML class diagram for the whole program}
+    \label{FullUML}
+\end{figure}
+
+\clearpage
 
 \end{document}
