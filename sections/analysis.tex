@@ -235,7 +235,30 @@ This means that I would need to write different algorithms for different file ty
 
 Three lossless plaintext compression algorithms I will consider as the basis of my algorithm are Run-Length Encoding, Huffman Coding, and Prediction by Partial Matching.
 
-\textbf{Some depth on the algorithms, how they work, and choosing Huffman}
+Run-Length Encoding works by representing repeated runs of one character as frequency-data pairs. For example, AAAAAABBB would be stored as "6A3B". However, this is not very effective for text files, where there is not often repeated runs of characters; it is instead very useful for images, where there may be, for example, a dark background with many long runs of dark pixels. Therefore, it is unsuitable for my needs, to compress plaintext.
+
+Prediction by Partial Matching uses complex statistical techniques to predict the most probable next characters based on the previous ones, assigning more probable characters shorter binary representations. However, to create and optimise such an algorithm, it would take a long time, which may cause be to pass my client's non-negotiable deadline. Plus, it is more computationally complex than the alternatives, so the compression and decompression algorithms would use more memory and processor time, and would likely take longer to run.
+
+Huffman Coding provides a perfect balance between complexity and how effective it is at compressing plaintext. It looks at the file as a whole, assigning more frequently used characters shorter binary representations. This is very effective for text files, where some letters are used more often than others. Moreover, most available Unicode characters are never used (special characters, scientific symbols, foreign language characters...) in most files, so the majority of characters would have a shorter representation in a file compressed in this way. While it may be more complex than Run-Length Encoding, it is perfectly feasible for me to implement it in the given time, and the implementations can be very quick! Even though Prediction by Partial Matching can in some cases provide better compression, for the files where this really matters to my client, they can just compress them themselves before backing them up.
+
+I have researched the Huffman Coding algorithm through this website \cite{PurdueHuffman}, which gives an explanation of one implementation of it.
+
+The high-level steps of the encoding algorithm are as follows:
+\begin{enumerate}
+    \item Count the number of times each character appears in the text,
+    \item Turn each character into a tree with a single node, weighted by its frequency,
+    \item Continually merge the two nodes with the smallest weights into a new tree, creating a new node with the nodes being merged as children, with its weighting being the sum of its two children's weights,
+    \item Stop once there is only one tree left - this is the Huffman tree,
+    \item Carry out a post-order tree traversal on the Huffman tree to write a representation of it to the beginning of the compressed file, and to build up a mapping of characters to their binary Huffman representation (this is defined by their placement in the tree with respect to the root node),
+    \item Go through each character in the file, writing its Huffman representation to the compressed file.
+\end{enumerate}
+
+The high level steps of the decoding algorithm are as follows:
+\begin{enumerate}
+    \item Read the Huffman tree from the start of the compressed file, representing it as a tree in the program,
+    \item Carry out a post-order traversal of the tree to build up a mapping of the Huffman binary bit-strings to the characters they represent,
+    \item Go through all of the bits in the compressed file, writing the character they represent to the decompressed file.
+\end{enumerate}
 
 \subsection{Class Diagram}
 
