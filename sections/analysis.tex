@@ -118,6 +118,12 @@ Based on the requirements established in the client interview, I have establishe
         \item Once a file has been transferred to the server, it should be compared with the original file on the client device, 
         \item This checking should be with a much smaller version of the file than that which was originally sent for most files – it should be up to 10kB in size, 
     \end{enumerate}
+    \item Generally, the program should work robustly,
+        \begin{enumerate}
+            \item Problems with user input or command line arguments should be gracefully handled,
+            \item The program should not crash while running,
+            \item Errors should be reported to the client, server, or both, depending on which is appropriate in the situation.
+        \end{enumerate}
 \end{enumerate}
 
 \subsection{Technical Points}
@@ -137,7 +143,7 @@ This diagram (Figure \ref{ProgramStructureDiagram}) shows how these main technic
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.93\linewidth]{images/Analysis-program-structure.jpg} 
+    \includegraphics[width=1.00\linewidth]{images/Analysis-program-structure.jpg} 
     \caption{Program Structure Diagram}
     \label{ProgramStructureDiagram}
 \end{figure}
@@ -262,12 +268,24 @@ The high level steps of the decoding algorithm are as follows:
 
 \subsection{Class Diagram}
 
-\textbf{Draw one}
+Figure \ref{AnalysisClassDiagram} shows a proposed design for the classes in my program.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{images/Analysis-class-diagram.jpg} 
+    \caption{Proposed UML Class Diagram}
+    \label{AnalysisClassDiagram}
+\end{figure}
+
+The FileSender and FileReceiver classes will contain methods related to sending and receiving data. These methods can be used by both the client and server programs, and so the Client and Server classes - which will contain the main methods run by the client and the server respectively - depend on them. These classes both inherit from an abstract base FileTransferer class which will contain any methods or attributes common to both classes.
+
+The HuffmanNode is a custom data structure representing the nodes that form a Huffman tree. This is used by both the HuffmanEncoder and HuffmanDecoder classes, which contain methods for encoding plaintext into Huffman, and decoding Huffman compressed text back into plaintext respectively. The ByteMaker and ByteReader classes will deal with any complexities that may arise in the processor of reading from and writing to binary files.
+
+Finally, the SetupRSA class will contain methods and data relating to the creation of RSA public and private keys, SetupAES will establish the shared AES encryption key, the Hasing class will allow methods for generating and verifying hashes, and the Transmission class will contain common procedures needed to serialise data into a format that can be decoded once received, and to decode such data once it has been received. These are of use in the FileSender and FileReceiver classes.
 
 \subsection{Order of Completion}
 
 This is a rough timeline of how long I expect it would take me to complete the sections outlined above.
-
 \begin{enumerate}
     \item Plaintext compression - 2 weeks
     \item RSA style key exchange - 2 weeks 
