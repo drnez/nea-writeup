@@ -88,8 +88,8 @@ Based on the requirements established in the client interview, I have establishe
     \item The client program should run on modern Linux systems, usable on a laptop or desktop computer, 
     \begin{enumerate}
         \item An installable binary package should be created that is executable on amd64 Linux systems, 
-        \item The client should not at any point use more than 500MB of RAM,
-        \item The client should never use more than 5\% of CPU time while running on a modern laptop; my client's processor, the Intel i9-12950HX, can be used for a test case,
+        \item It should be very unlikely for the client to use more than 50MB of RAM for prolonged periods of time,
+        \item It should be very unlikely for the client to use more than 5\% of CPU time while running on a modern laptop; my client's processor, the Intel i9-12950HX, can be used for a test case,
     \end{enumerate}
     \item It should be usable with an intuitive command-line interface, not requiring interactive input, 
     \begin{enumerate}
@@ -100,8 +100,8 @@ Based on the requirements established in the client interview, I have establishe
     \item The server should be able to run on a low-end laptop 10-15 years old, 
     \begin{enumerate}
         \item The program should avoid reading and writing to the system drives as much as possible, since most such devices use HDDs, 
-        \item The server program should not at any point use more than 250MB of RAM
-        \item The server program should never use more than 10\% of CPU time while running on such a device; my client's desired server's processor, a 2\textsuperscript{nd} generation Intel i5 processor, can be used as a test case, 
+        \item It should be very unlikely for the server program to at any point use more than 200MB of RAM,
+        \item It should be very unlikely for the server program to use more than 10\% of CPU time while running on such a device; my client's desired server's processor, a 2\textsuperscript{nd} generation Intel i5 processor, can be used as a test case, 
     \end{enumerate}
     \item All file transfers should be secure, so a man-in-the-middle would not be able to intercept data,
     \begin{enumerate}
@@ -110,7 +110,7 @@ Based on the requirements established in the client interview, I have establishe
     \end{enumerate}
     \item Text files stored on the server should be compressed such that they use a reasonable amount of storage, 
     \begin{enumerate}
-        \item They should be at most as large as the uncompressed files, i.e. file size should never increase following compression, 
+        \item They should be at most as large as (or very close to) the uncompressed files, i.e. the file size should never increase following compression by more than 10 bytes,
         \item The client should be able to decompress any file when needed by the user, storing any needed details about the compression within the file, 
     \end{enumerate}
     \item File transfers should be verifiably correct, so data is not corrupted during transmission,

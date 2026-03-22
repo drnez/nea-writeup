@@ -1,0 +1,145 @@
+% LTeX: language=en-GB enabled=true
+
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\subsection{Testing Strategy}
+
+To verify that my program fulfils all of the criteria specified in the Specification, I will carry out two main forms of formal testing.
+
+Firstly, I will record a video of the client and server devices each running the program, showing them sending files between them and verifying the integrity of files being sent, monitoring the processor and memory usage of the programs, ensuring compression reduces file size, verifying that the program handles unexpected input gracefully, as well as some other details.
+
+However, some parts of the program, namely the encryption, cannot be easily verified through normal usage, since if the files were being sent insecurely, the user would not notice and the program could appear to still work correctly, while being vulnerable to attacks behind the scenes. Therefore, I will separately test and verify the functioning of a sample of these algorithms. Since I am using standard C\# implementations for Hashing and AES implementation, I will include here the testing for my Miller-Rabin Primality Test and my implementation of the Extended Euclidean Algorithm, both of which I have implemented myself, and form part of the broader RSA key exchange.
+
+\subsection{Typical Use Video}
+
+Attached in the submission is a video showing a typical use of the programs. Note that throughout, 'client' refers to the device making the backups, and 'server' to the device receiving and storing them. The structure of the video is as follows:
+
+\begin{enumerate}
+    \item The original contents of the five files to be backed up are shown on the client device. The first, test1.txt, is a plaintext file containing generated lorem ipsum text. The second file, test2.txt, is another plaintext file, this time containing the novella Strange Case of Dr Jekyll and Mr Hyde by Robert Louis Stevenson. The third file, test3.cs, is some sample C\# source code (in fact, it is part of the code used in the program being run). The fourth file, test4.png, is a screenshot of my desktop. The final file, test5.mp4, is a video of the earth spinning.
+    \item Throughout, the programs are run in split-screen with the \textit{htop} utility, showing computer resource usage.
+    \item The executable binary is used to run the server program on port 9999.
+    \item The same executable binary is used to run the client program interactively, with me entering the server's IP address and port, and then the file path of test1.txt, when prompted, with the program sending it to the server.
+    \item I verify that the server has received a compressed version of this file, stored with a .huff extension to indicate this. The file size of the compressed version on the server is checked using the command \textit{du -sh [filename]}, and then compared to the same command run on the original file on the client device.
+    \item The server is started again on port 9999. This time the client sends the other four test files using command line arguments only.
+    \item On the server device, I verify that all of these have been received, and similarly to before compare their file sizes against the original ones on the client device. Note that these files should all be in the ServerReceived directory on the server.
+    \item Using command line arguments only, I run a command on the client device to retrieve all five files from the server. I them verify that they are all present in the newly created ClientReceived directory on the client, and then verify that each file is identical in content to the original ones that were sent.
+    \item Finally, I carry out various tests involved invalid, incorrect, and missing interactive and command line input to verify that the programs handle these correctly and robustly.
+\end{enumerate}
+
+The table below contains details on individual conclusions that can be drawn from the test video, with details on how they were tested, and which specification points they show the fulfilment of.
+
+\begin{longtable}{|c|c|p{3.1cm}|p{3.1cm}|p{3.4cm}|p{0.9cm}|c|}
+\hline
+& Spec & Test steps & Expected result & Actual result & Time & Pass? \\
+\hline
+
+1 & 1a/3b & Run the client and server programs interactively & They should form a connection & They form a connection - this is shown by the client not throwing an error & 0:51 - 1:35 & Pass \\
+\hline
+2 & 1b/3b & Send a file from the client to the server interactively & The file should be accessible on the server & The file is accessible on the server (though in compressed form) & 0:51 - 1:50 & Pass \\
+\hline
+3 & 2a & Run the executable binary of the client and server programs & They should work as expected & They run as expected & 0:51 - 1:05 & Pass \\
+\hline
+4 & 2b & While running the program, monitor the RAM usage of the client & It should not exceed 50MB used for a prolonged period of time & It never exceeded 40MB used. At the point where the client runs for the longest period of time (timestamped), the device's memory use reaches a maximum of 6.93GB from a base of 6.89GB. The difference is 40MB - though even this usage was for a very short time period. & 2:36 - 2:43 & Pass \\
+\hline
+5 & 2c & While running the program, monitor the CPU usage of the client & It should not exceed 5\% of CPU time usage for a prolonged period of time & While running the client for the longest period of time (timestamped), the \textit{overall} CPU usage of the client did not exceed 1\%! & 2:36 - 2:43 & Pass \\
+\hline
+6 & 3a & Send a file from the client to the server using only command line arguments & The file should be available on the server & The file is available on the server under the ServerReceived directory & 2:36 - 2:59 & Pass \\
+\hline
+7 & 3a & Request a file from the server using only command line arguments & The file should be accessible on the client now & The file is accessible on the client & 3:44 - 4:10 & Pass \\
+\hline
+8 & 3c & Run the programs & At no point should a graphical interface appear & No graphical interfaces appear & 0:00 - 6:17 & Pass \\
+\hline
+9 & 4b & While running the program, monitor the RAM usage of the server & It should not exceed 200MB used for a prolonged period of time & It never exceeded 2\% of memory used. Since the laptop has 4GB of RAM, this works out to never exceeding 80MB of RAM & 0:00 - 6:17 & Pass \\
+\hline
+10 & 4c & While running the program, monitor the CPU usage of the server & It should not exceed 10\% of CPU time usage for a prolonged period of time & It did not exceed 2\% of CPU time for the most part. Between 1:13 - 1:15, it transiently spiked to 46\% usage, but this did not last for more than 2 seconds. & 0:00 - 6:17 & Pass \\
+\hline
+11 & 6a & Send 5 files from the client to the server: two regular plaintext files, a plaintext source code file, a png image file, and an mp4 video file & The three plaintext files should have their file size significantly reduced, and the other files should not have their file size increased by more than a byte & The first plaintext files had its size reduced from 60kB to 32kB, the second from 160kB to 88kB, and the C\# source code file from 16kB to 8kB. The other files did not appear to have their size changed (2.3MB and 1.5MB respectively before and after transmission). The increase of 1 byte associated with the compression will have been lost to rounding. & 1:04 - 2:10, \newline\newline 2:33 - 3:40 & Pass \\
+\hline
+12 & 6b & Retrieve those 5 files from the server & The files should be identical to before they were sent & The files were identical to before they were sent & 3:43 - 4:50 & Pass \\
+\hline
+13 & 8abc & Enter an invalid command line flag & The program should not crash, but rather display details on correct usage & The program did not crash and instead displayed details on correct usage & 4:54 - 4:59 & Pass \\
+\hline
+14 & 8abc & Enter in invalid command line arguments to the client program (after a client flag) & The program should not crash, but request interactive input from the user & The program did not crash and instead requested interactive input from the user & 4:59 - 5:06 & Pass \\
+\hline
+15 & 8a & Enter an invalid IP address interactively & The program should request a new IP address from the client, rather than attempting to proceed & The program requested a new IP address from the client & 5:06 - 5:17 & Pass \\
+\hline
+16 & 8a/c & Attempt to run the program with the server (-s) flag without specifying a valid port & The program should inform the user that they need to specify a port, and terminate & The program informed the user that they need to specify a valid (integer) port before terminating & 5:18 - 5:28 & Pass \\
+\hline
+17 & 8b/c & Attempt to run the client program, specifying an IP address where there is no server running & The program should interactively request a new IP address from the user & The program interactively requested a new IP address from the user & 5:37 - 5:58 & Pass \\
+\hline
+18 & 8b/c & Enter in a file path that does not exist & The program should inform the user of this and terminate without crashing & The program informed the user of this and terminated without crashing; the server also displayed a message confirming that the transmission was unsuccessful & 6:03 - 6:17 & Pass \\
+\hline
+\end{longtable}
+
+The reasons for the tests above, and the conclusions that can be drawn from them, are listed in this table below.
+
+\begin{longtable}{|c|p{0.45\linewidth}|p{0.41\linewidth}|}
+    \hline
+    Test & Purpose & Conclusions Drawn \\
+    \hline
+
+    1 & To ensure that the client and server programs can interact with each other, and to show that the client program can work interactively (i.e. without all information entered through command line flags) & The client and server programs can connect to each other, the client interactive mode works \\
+    \hline
+    2 & To ensure that the client can send a file to the server, and that the server can recieve and store it, and to test again that the interactive mode on the client works & All is successful and the client can interactively send a file to the server, and the server can recieve and store it properly \\
+    \hline
+    3 & To ensure that the program can be run as one executable binary (rather than having to install dotnet and run the project with \textit{dotnet run}) & It can be run through one executable \\
+    \hline
+    4 & To ensure that the client program does not use too much RAM & The RAM usage of the client is within the boundaries set \\
+    \hline
+    5 & To ensure that the client program does not use too much CPU time & The CPU usage of the client program \textbf{on my client's laptop} was as expected/within the bounds set throughout \\
+    \hline
+    6-7 & To ensure that the program can be used without any interactive input, as requested by my client & The program works as expected with interactive input \\
+    \hline
+    8 & To ensure there is no grpahical interface for any functions, as requested by my client & There is never any GUI, as expected \\
+    \hline
+    9 & To ensure that the server program does not use too much RAM & The RAM usage of the server is within the boundaries set \\
+    \hline
+    10 & To ensure that the server program does not use too much CPU time & The CPU usage of the server program \textbf{on my client's designated server laptop} was as expected/within the bounds set throughout \\
+    \hline
+    11 & To ensure that plaintext files have their sizes significantly reduced by compression, and to verify that other files do not have their sizes increased (more than a byte, which is necessary) & The compression works as expected, being very effective in compressing plaintext files, and not increasing the sizes of the other files (significantly) \\
+    \hline
+    12 & Ensures that files can be retrieved from the server back to the client, and checks that the decompression algorithm works, since the files stored on the server are compressed but should be returned to the client uncompressed & The server can return files to the client correctly, and the decompression works as expected \\
+    \hline
+    13-18 & Ensures that the program handles samples of invalid input robustly, without crashing & Unexpected and invalid inputs are handled gracefully as expected \\
+    \hline
+\end{longtable}
+
+\subsection{Verifying the RSA Key Exchange}
+
+The two sections of the RSA Key Exchange procedure that I have sampled for formal testing are the Miller-Rabin Primality Test - which I use to generate numbers that are prime (to a very high probability) - and the Extended Euclidean Algorithm, which I use to generate the decryption constant, $d$, which is used to decrypt transmissions. In both cases, I compare the output from my algorithms with the widely trusted Bouncy Castle C\# library \cite{bouncycastleGH}, since these computations are too long to perform by hand (for checking).
+
+\subsubsection{The Miller-Rabin Primality Test}
+
+The following article \cite{asecuritysite_63142} shows how Bouncy Castle can be used to test primality. Based on the information given there, I devised the following code (Listing \ref{PrimeTestCode}) to test my prime number generation code (Listing \ref{PrimalityCode}). For this testing, the GenerateRSAPrime procedure has been made \textit{public}.
+
+Do note that Bouncy Castle also uses a probabalistic method to verify primes, similar to Miller Rabin. It is not feasible to deterministically verify the primality of these numbers, since the primes generated by my algorithm are 512 bits in length, corresponding to a 155 digit decimal number!
+
+\FloatBarrier
+\lstinputlisting[
+caption={Code for testing prime number generation},
+label={PrimeTestCode}
+]{code/PrimalityTest.cs}
+\FloatBarrier
+
+\FloatBarrier
+\lstinputlisting[
+caption={Prime number generation code},
+label={PrimalityCode}
+]{code/PrimeGenerationCode.cs}
+\FloatBarrier
+
+The test was successful, with all 500 test cases passing. Listing \ref{PrimalityTestOutput} provides a sample of the output.
+
+\FloatBarrier
+\lstinputlisting[
+language={sh},
+caption={Prime number generation test output},
+label={PrimalityTestOutput}
+]{code/PrimeTestOutput.txt}
+\FloatBarrier
+
+\subsubsection{The Extended Euclidean Algorithm}
+
+\end{document}
