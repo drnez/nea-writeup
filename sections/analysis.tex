@@ -89,7 +89,7 @@ Based on the requirements established in the client interview, I have establishe
     \begin{enumerate}
         \item An installable binary package should be created that is executable on amd64 Linux systems, 
         \item It should be very unlikely for the client to use more than 50MB of RAM for prolonged periods of time,
-        \item It should be very unlikely for the client to use more than 5\% of CPU time while running on a modern laptop; my client's processor, the Intel i9-12950HX, can be used for a test case,
+        \item It should be very unlikely for the client to use more than 5\% of CPU time for prolonged periods of time while running on a modern laptop; my client's processor, the Intel i9-12950HX, can be used for a test case,
     \end{enumerate}
     \item It should be usable with an intuitive command-line interface, not requiring interactive input, 
     \begin{enumerate}
@@ -100,8 +100,8 @@ Based on the requirements established in the client interview, I have establishe
     \item The server should be able to run on a low-end laptop 10-15 years old, 
     \begin{enumerate}
         \item The program should avoid reading and writing to the system drives as much as possible, since most such devices use HDDs, 
-        \item It should be very unlikely for the server program to at any point use more than 200MB of RAM,
-        \item It should be very unlikely for the server program to use more than 10\% of CPU time while running on such a device; my client's desired server's processor, a 2\textsuperscript{nd} generation Intel i5 processor, can be used as a test case, 
+        \item It should be very unlikely for the server program to use more than 200MB of RAM for prolonged periods of time,
+        \item It should be very unlikely for the server program to use more than 10\% of CPU time for prolonged periods of time while running on such a device; my client's desired server's processor, a 2\textsuperscript{nd} generation Intel i5 processor, can be used as a test case, 
     \end{enumerate}
     \item All file transfers should be secure, so a man-in-the-middle would not be able to intercept data,
     \begin{enumerate}
@@ -181,13 +181,17 @@ The website \cite{RSAgfg} contains details about the mathematics of the RSA algo
     \item The receiver generates two large primes, $p,q$, then computes their product, $n = pq$.
     \item Euler’s Totient function, $\phi(pq) = (p-1)(q-1)$, is applied to $n$.
     \item An encryption exponent, $e$, is selected such that $1 < e < \phi(n)$, and $e$ is relatively prime with $\phi(n)$. Note that $a,b \in \mathbb{Z}^+$ are relatively prime $\iff \nexists\ x \in \mathbb{Z} : x > 1,\ x\,|\,a,$ and $x\,|\,b$.
-    \item A decryption exponent, $d$, is calculated such that $de = 1 \pmod{\phi(n)}$. The extended Euclidian algorithm provides a method for this.
+    \item A decryption exponent, $d$, is calculated such that $de = 1 \pmod{\phi(n)}$. The extended Euclidean algorithm provides a method for this.
     \item The public key is formed from $(n,e)$ and the private key $(n,d)$. The receiver sends their public key only to the sender. 
     \item The encrypted ciphertext, $C$, is calculated through $C = M^e \pmod n$, where $M$ is some numerical representation of the message. 
     \item The ciphertext is decrypted into the plaintext message, $M$, by the calculation $M = C^d \pmod n$.
 \end{enumerate}
 
 Now, the sender encrypts their message with the receiver’s public key, and then only the receiver can decrypt it since only they have the private key. Computing $\phi(n)$ is infeasible without knowing the primes, $p,q$, that $n$ is a product of, and this is also infeasible to compute due to the large size of the primes. This means no other party can calculate the private key from the public key.
+
+As mentioned in the steps, the Extended Euclidean Algorithm is key to RSA, generating the decryption constant $d$. Wikipedia \cite{EEAWiki} provides an explanation of the algorithm. In effect, it calculates coefficients $x, y$, such that $ax + by = \gcd(a,b)$ for some $a, b$.
+
+This is useful, since the decryption exponent, $d$, is calculated such that $de = 1 \pmod{\phi(n)}$. Therefore, by choosing $a = e$ and $b = \phi(n)$, the algorithm calculates $ex + \phi(n)y = \gcd(e, \phi(n)) = 1$ since in RSA $e$ (or $n$) is chosen such that $\gcd(e, \phi(n)) = 1$. Now, taking both sides in the modulo of $\phi(n)$, we get $ex = \gcd(e, \phi(n)) \pmod{\phi(n)}$, so $x$, that the algorithm calculates, is the desired decryption constant $d$.
 
 \bigskip
 \textbf{Diffie-Hellman key exchange}
@@ -201,9 +205,17 @@ Page 84 of the following lecture notes \cite{OxCompSecNotes} contains a brief de
     \item Now, they both have the shared secret, $S = g^{s_as_b}\pmod p$, which can be used to establish a shared key.
 \end{enumerate}
 
-An attacker would have access to $g,\ p,\ g^{s_a}\pmod p,\ g^{s_b}\pmod p$, and need to compute $S = g^{s_as_b}\pmod p$ to compromise the conversation. A quick solution to the Discrete Logarithm Problem would imply a quick solution to this problem, but one is not currently known. This is central to the security of this key exchange, similarly to the prime factorisation problem for RSA. 
+An attacker would have access to $g,\ p,\ g^{s_a}\pmod p,\ g^{s_b}\pmod p$, and need to compute $S = g^{s_as_b}\pmod p$ to compromise the conversation. A quick solution to the Discrete Logarithm Problem would imply a quick solution to this problem, but one is not currently known. This is central to the security of this key exchange, similarly to the prime factorisation problem for RSA.
 
-As can be seen, RSA and Diffie-Hellman are very similar in security, and difficulty of implementation, however the advantage of RSA is that it can also be used to provide signed certificates to prove the authenticity of the sender. This has not been an aim as of yet, but using RSA will make it easier to implement this if desired in the long-term, since I intend to make this project open-source upon completion.
+As can be seen, RSA and Diffie-Hellman are very similar in security, and difficulty of implementation, however the advantage of RSA is that it can also be used to provide signed certificates to prove the authenticity of the sender. This has not been an aim as of yet, but using RSA will make it easier to implement this if desired in the long-term, since I intend to make this project open-source upon completion. Therefore, I will use the RSA algorithm for key exchange.
+
+An important aspect of the RSA (and Diffie-Hellman) algorithms is the generation of suitably large, random, prime numbers. It is completely infeasible to go through all of the possible factors of a prime to generate primes of the size required (512 bits), so more complicated algorithms need to be used for this task. Generally, a large random integer is created by filling an array of bytes with random bits, then it is tested for primality, and this is repeated until a prime is found. The algorithms to be mentioned are used to check whether the integers are prime.
+
+One option is the AKS primality test. Wikipedia \cite{AKSWiki} provides a description of it. The algorithm is based upon polynomial ring theory, and can deterministically verify whether a given integer is prime in polynomial ($\mathcal{O}(\log(n)^{12})$) time. However, despite this, the runtime is still normally very long, and so it is not typically used in practice - it is mainly analysed in research contexts instead. Plus, it depends on knowledge of very advanced mathematics that I do not have, and learning them to implement this may cause me to exceed my client's strict deadline. Therefore, I will not be using this algorithm.
+
+Another possible algorithm is the Fermat primality test, which is based on Fermat's Little Theorem. This states that $a^{p-1} = 1 \pmod p$ for any integer $a$ and primes $p$. By repeating this test for many integers $a$, a number is very likely to be prime if it satisfies the equation every time. However, a key weakness of this algorithm is that it can falsely identify certain numbers, such as the Carmichael numbers, as prime.
+
+Therefore, the best algorithm to use in my situation is the Miller-Rabin primality test. It uses a similar, though slightly more complicated, equation, and checks whether an integer satisfies the equation for a large number of bases, in which case it flags it as probably prime. The advantage it has over the Fermat test is that there are no known sets of composite numbers that are falsely identified as prime for all bases $a$ \cite{MillerRabinWiki}. In each test, there is only a $\frac{1}{4}$ chance that a composite number is falsely flagged as prime, so by repeating the test 40 times, the probability of an incorrect result is reduced to $4^{-40}$, which is astronomically small. Therefore, I will use the Miller-Rabin primality test to generate large random primes for the RSA algorithm.
 
 \subsubsection{Symmetric Encryption}
 

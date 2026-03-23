@@ -1,0 +1,148 @@
+% LTeX: language=en-GB enabled=true
+
+\documentclass[../main.tex]{subfiles}
+
+\begin{document}
+
+\newenvironment{qanda}{\setlength{\parindent}{0pt}}{\smallskip}
+\newcommand{\Q}{\bigskip\bfseries Q: }
+\newcommand{\A}{\par\textbf{A:} \normalfont}
+
+\subsection{Evaluation Against the Requirements}
+
+\begin{longtable}{|c|p{0.9\linewidth}|}
+\hline
+Spec & To what extent has it been achieved? \\
+\hline
+\endfirsthead
+
+\hline
+Spec & To what extent has it been achieved? \\
+\hline
+\endhead
+
+\hline
+\endfoot
+
+\hline
+\endlastfoot
+
+1a & This has been fully achieved. The same program can be run on the client and server, specifying which it should act as through a flag. The client will make a connection to the server running at the IP address specified by the client. \\
+\hline
+
+1b & This has been fully achieved. The client can send files to the server, and the server stores them under the ServerReceived directory, maintaining the file structure of the client. For example, if the client sends the file \texttt{/home/shayan/test1.txt}, it will be stored at \texttt{ServerReceived/home/shayan/test1.txt} on the server. \\
+\hline
+
+2a & This has been fully achieved. The program comes with a self contained executable binary for amd64 Linux systems. \\
+\hline
+
+2b & This has been fully achieved. In all of my testing the client program never used more than 40MB of RAM, below the limit of 50MB set. This is partly due to my choice of algorithms, for example, opting to use the simpler Huffman Coding rather than Prediction by Partial Matching, which would use more RAM. \\
+\hline
+
+2c & This has been fully achieved. In my testing the client program only exceeded the 5\% limit very briefly, which is within the bounds of the specification point. For the vast majority of its runtime, the program used less CPU time than that. Do note that this specification point is limited to my client’s laptop and its processor - CPU usage will vary greatly by device. \\
+\hline
+
+3a & This has been fully achieved. The server program (running the program with the server -s flag) accepts no interactive input and requires the port to be passed in as a command line argument. The client program (running the program with the client -cr or -cs flag) has all of its functionality accessible through command line arguments. \\
+\hline
+
+3b & This has been fully achieved. When running the program with the client -cs or -cr flag, the server IP, server port, and file paths can be specified interactively. This allows the user to correct errors identified by the program. However, no core functionality is gained through the interactive mode so the program can be used in scripts without any problems. \\
+\hline
+
+3c & This has been fully achieved. There is no graphical interface and the program only works through a console, as intended. \\
+\hline
+
+4a & This has been fully achieved. Files are compressed before being sent, and are stored in compressed form on the server, only decompressed on the client device after being retrieved. This minimises how much data the program reads and writes from the server’s hard drive. \\
+\hline
+
+4b & This has been fully achieved. In all of my testing the client program never used more than 80MB of RAM, below the limit of 200MB set. \\
+\hline
+
+4c & This has been fully achieved. In my testing the client program never exceeded the 10\% limit. In fact, it never exceeded 2\% processor usage. Do note that this specification point is limited to my client’s server laptop and its processor. \\
+\hline
+
+5a & This has been fully achieved. First, an asymmetric RSA key exchange is used to create public and private keys to share a symmetric AES key between the client and server devices. From that point on, all data is encrypted symmetrically with that AES key. \\
+\hline
+
+5b & This has been fully achieved. A standard C\# implementation of AES is used, which is widely recognised as correct, and I have checked key components of my RSA implementation through testing. \\
+\hline
+
+6a & This has been fully achieved. Plaintext files are almost always significantly compressed, and all other files are kept the same size. There is also functionality to ensure that text files never increase in size unnecessarily. \\
+\hline
+
+6b & This has been fully achieved. Files are decompressed by the client once they are received. This has been shown in testing, where the files are identical after receipt to before being backed up. \\
+\hline
+
+7a & This has been fully achieved. A hash of the file is sent along with the file itself, and the recipient verifies integrity by comparing hashes. This is implemented for both sending and retrieving files. \\
+\hline
+
+7b & This has been fully achieved. The hash is 256 bits (32 bytes) in size, which is much smaller than the 10kB limit. \\
+\hline
+
+8a & This has been fully achieved. If any user input is invalid, the user is informed of this, and in some cases is given the opportunity to rectify it. \\
+\hline
+
+8b & This has been fully achieved. In all of my testing, the program has never crashed. Errors are handled gracefully through exception handling and defensive programming. \\
+\hline
+
+8c & This has been fully achieved. The program never fails silently; there is always some form of error message displayed. \\
+\hline
+\end{longtable}
+
+As justified in the table, all of my specification points have been fully achieved.
+
+\subsection{Client Feedback}
+
+To gather some feedback from my client, I conducted a final interview with them, to get their opinion on the final product made. 
+
+\subsubsection{Final Client Interview}
+\begin{qanda}
+\Q Overall, what do you think of the backup utility that I’ve created? 
+
+\A I think it’s broadly excellent. It does what I want it to do - I can use my old laptop as a server to store backups of files on my main laptop. I love that all the file transfers are encrypted, and that the files are sent compressed. It has a very intuitive command line interface, and so ties in really neatly with my workflows, which are normally based in the terminal. Having the single executable binary means that I can very easily install it system-wide, and I am really pleased that all of its functions are available through command-line environments, since I want to incorporate this into a few of my system administration scripts. 
+
+\Q Thank you so much! Are there any areas where you see shortfalls? 
+
+\A There are some small improvements that I would suggest. Do note that these are mostly matters of personal preference. Firstly, when the server is running, if it is listening on the broader private network (i.e. not on the loopback interface) it reports its IP address as 0.0.0.0. While this is not incorrect, as it signifies that the server is accessible on both its private IP address on the private network, and from the wider internet, since I will only use the server from a private network, I would rather that it displays the private IP address of the laptop on the network. Currently, if I forget the server’s private IP address, I would need to run separate commands to determine that. Another point is that there is no indication on the server when a file has been successfully received. Though I can see this on the client, since the program terminates once all of the files have been sent, it would be nice to have some indication of this on the server too, for my own sanity. Finally, while I really like that there are no graphics, currently command line arguments are just specified sequentially. I think it could be most intuitive if they followed flags. For example, instead of just needing to enter the server IP address and port after the -cs [client send] flag, perhaps something like this: \textit{-cs -\--serverip [server IP] -\--serverport [server port]} could be more intuitive. [The client wrote the italicised text on paper during the interview.] 
+
+\Q Great, that’s really good to know! Besides from opinions of preference, are there any features you think should have been implemented? 
+
+\A Well, you implemented everything I told you to, and I am very happy with the outcome, particularly given the deadline I set you, which you have even exceeded! 
+
+\Q Thanks! But if you were to request the software again, and you no longer needed to worry about your deadline, are there any additional features you would have asked for? 
+
+\A Yes, there are actually a few points. I think it could have been helpful to have an option to back up all the files in a given directory at once. For example, I would like to be able to specify /home/sam/ and have the program backup my whole home directory. This isn’t a big deal though, as since it can be used as part of a script, I can easily create a script to do this for me. Another useful feature could be the ability to store multiple versions of a file on the server, so I can see the different versions of my files over time. Following on from this, when backing up a file, if it hasn’t changed since the last backup, there could be some functionality to just keep the old copy, reducing runtime, network load, and the strain on my old hard drives. This is also useful as a standalone point, even if old versions can’t be kept - if a file hasn’t changed since the last backup, it shouldn’t be re-sent ideally. Finally, while I really like the encryption implemented to prevent malicious parties being able to view the data I am sending, it could also have been useful to have some method of verifying the authenticity of communications between the client and the server, to ensure that a malicious actor can’t retrieve my backups! 
+
+\Q Thank you for that - that’s really useful. To wrap up, could you rate the overall backup utility out of 10 based on its ease of use, functionality, and overall fit to your requirements. 
+
+\A Of course! I would give it a 9/10 for ease of use. I love the purely command-line based interface, that it can run with just one executable binary, and the fact that all needed options can be passed in through the command line. The only point of improvement here is that I would have preferred the command line options to be passed in through flags, as I pointed out before. For functionality, I would give it an 8/10. It contains absolutely everything I needed, but there is of course more that could be added, as I recently mentioned, in the grand scheme of things. I think it is a 10/10 for the fit to my requirements. It achieved every point I indicated at the start of the project, and all in the time period I had designated. I am very happy with the outcome overall!
+
+\end{qanda}
+
+\subsubsection{Evaluating the Interview}
+
+Overall, I am very pleased that my client was impressed with the software produced. He seemed to really like the general functioning of the backup utility, and made many positive comments about points that he had brought up in the initial client interview being met. I was also very pleased to hear that he considers the program to have fully met its specification.
+
+However, there were also constructive points mentioned, about potential improvements that could be made. These fall under two broad categories. Firstly, there are improvements based on what they would prefer. These points were that they would like:
+\begin{enumerate}
+    \item The server's private IP address displayed when it is listening on the private network,
+    \item The server to give a printed indication whenever a file is successfully received, and
+    \item The program to accept command line arguments with named flags, rather than just sequentially.
+\end{enumerate}
+Secondly, there are improvements that include adding new functionality. These suggestions were:
+\begin{enumerate}
+    \item To enable the utility to store backups of all the files under one directory natively, by just specifying the parent directory,
+    \item To allow the user to store multiple versions of a file as backups, rather than just the most recent copy,
+    \item To only send a file to the server if it has changed since the previous backup, rather than sending it to overwrite an identical file in some situations, and
+    \item To incorporate some sort of verification that the client or server is who they claim to be, so malicious actors cannot impersonate them.
+\end{enumerate}
+The first group of improvements can be implemented really simply, by just making minor tweaks to the code, since the overall functionality is not changed, just the way it interfaces with the user. However, more substantial additions are needed for the functionality suggested in the second group. These will be explored in depth in the next section.
+
+\subsection{Improving the Outcome}
+
+As identified by my client, and described in the previous section, there are four points of functionality that could be added to improve the outcome if the problem was revisited.
+
+Firstly, the backup utility should be able to store backups of all of the files under one directory natively. This should be fairly straightforward to implement, using the built-in C\# \texttt{Directory.GetFiles()} method to get the names of all of the files under the directory specified by the user. At that point, each file should be treated as it would be had the client entered it separately. There would be a need to differentiate between when the user is specifying a directory, under which all files should be backed up, or just a file itself to back up. This distinction could be made by requiring directories to be entered with a leading \texttt{/}. For example, specifying \texttt{/home/shayan/} would back up all of the files under the \texttt{/home/shayan/} directory, while specifying \texttt{/home/shayan/test1.txt} would only back up the \texttt{test1.txt} file.
+
+The second point mentioned was allowing the user to store multiple versions of a file as backups. [have a record file storing like a dictionary or smth linking files to versions held, or some filename magic]
+
+\end{document}

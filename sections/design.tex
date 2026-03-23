@@ -4,6 +4,15 @@
 
 \begin{document}
 
+In the design of my program, I expect that the key (though not only) points of complexity and demonstrations of technical skill will arise from the following:
+\begin{enumerate}
+    \item The use of a custom class to represent the Huffman tree (a binary tree),
+    \item Using dictionaries, priority queues, stacks, and recursive subroutines for depth first tree traversal to create and reconstruct the Huffman trees,
+    \item The reading and writing of bytes to binary files, with the use of logical operations to read or modify bits, and placing metadata at the start of the file to indicate whether a file is compressed, and how many 0 bits have been added at the end of the file as padding (to be ignored upon decompression),
+    \item The mathematical Miller-Rabin algorithm to generate large random prime numbers,
+    \item The mathematical Extended Euclidean algorithm to generate the decryption constant for the RSA algorithm.
+\end{enumerate}
+
 \subsection{Huffman Compression}
 
 As decided upon in my Analysis (Section \ref{CompressionAnalysis}), I will use Huffman Coding to compress all plaintext files that are being backed up. The compression and decompression will occur on the client-side, before the files and sent, and after they are received.
@@ -37,6 +46,8 @@ It performs a post-order depth first search of the binary Huffman tree created. 
 
 The procedure also links each character to its Huffman encoding as the tree is searched (going left in the tree adds a 0 to the encoding, going right adds a 1). This is used later in the program to write each character's Huffman encoding to the compressed file. Filling the dictionary in this procedure means that another search of the tree is not needed, making the code quicker to run.
 
+The use of recursion helps increase the clarity of the procedure and simplify the problem, by breaking it down into smaller sub-problems, until the trivial base case of an empty tree is reached.
+
 The code for this procedure can be found in Listing \ref{SearchTreeCode}.
 
 \FloatBarrier
@@ -48,14 +59,18 @@ The code for this procedure can be found in Listing \ref{SearchTreeCode}.
 
 This tree that is searched in the above procedure is created using a priority queue to continually merge trees, until just one is left. The snippet of the flowchart that relates to this section of the code can be found in Figure \ref{HuffmanPriorityQueueFlowchart}.
 
+\FloatBarrier
 \begin{figure}[hb]
     \includegraphics[width=0.47\linewidth]{images/HuffmanPriorityQueue.pdf}
     \centering
     \caption{A flowchart depicting the creation of the Huffman tree}
     \label{HuffmanPriorityQueueFlowchart}
 \end{figure}
+\FloatBarrier
 
 First, nodes are created for each character, and these become trees of size 1. They are placed in a priority queue such that the nodes with the greatest frequencies are last. Then, the nodes with the two lowest frequencies are continually dequeued, and made children of a new node, which is enqueued onto the priority queue. Since this is not a leaf node, it does not contain a character. This node's frequency is equal to the sum of the frequencies of its children. The less frequent node is made the left child of the tree. This repeats until just one tree remains, which is the final Huffman tree, which can be used to generate encodings for each character.
+
+The priority queue provides a simple and intuitive way to retrieve the node with the lowest frequency, as desired, without needing to search all of the nodes each time, or intentionally place them into a list in an ordered way.
 
 The code for this section can be found in Listing \ref{HuffmanPriorityQueueCode}.
 
@@ -191,7 +206,7 @@ From the Analysis, the following procedure can be followed to generate RSA keys:
     \item The receiver generates two large primes, $p,q$, then computes their product, $n = pq$.
     \item Euler’s Totient function, $\phi(pq) = (p-1)(q-1)$, is applied to $n$.
     \item An encryption exponent, $e$, is selected such that $1 < e < \phi(n)$, and $e$ is relatively prime with $\phi(n)$. Note that $a,b \in \mathbb{Z}^+$ are relatively prime $\iff \nexists\ x \in \mathbb{Z} : x > 1,\ x\,|\,a,$ and $x\,|\,b$.
-    \item A decryption exponent, $d$, is calculated such that $de = 1 \pmod{\phi(n)}$. The extended Euclidian algorithm provides a method for this.
+    \item A decryption exponent, $d$, is calculated such that $de = 1 \pmod{\phi(n)}$. The extended Euclidean algorithm provides a method for this.
     \item The public key is formed from $(n,e)$ and the private key $(n,d)$. The receiver sends their public key only to the sender. 
     \item The encrypted ciphertext, $C$, is calculated through $C = M^e \pmod n$, where $M$ is some numerical representation of the message. 
     \item The ciphertext is decrypted into the plaintext message, $M$, by the calculation $M = C^d \pmod n$.
