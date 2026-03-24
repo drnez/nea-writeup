@@ -29,7 +29,7 @@ static class SetupAes
         stream.Write(Transmission.Serialise(keys.Item1)); // send n
         stream.Write(Transmission.Serialise(keys.Item2)); // send e
 
-        BigInteger ciphertext = Transmission.ReadBigInt(stream); // recieve RSA encrypted AES key
+        BigInteger ciphertext = Transmission.ReadBigInt(stream); // receive RSA encrypted AES key
 
         BigInteger plaintext = BigInteger.ModPow(ciphertext, keys.Item3, keys.Item1); // M = C^d (mod n)
 

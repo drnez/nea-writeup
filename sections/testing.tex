@@ -106,7 +106,7 @@ The reasons for the tests above, and the conclusions that can be drawn from them
 
     1 & To ensure that the client and server programs can interact with each other, and to show that the client program can work interactively (i.e. without all information entered through command line flags) & The client and server programs can connect to each other, the client interactive mode works \\
     \hline
-    2 & To ensure that the client can send a file to the server, and that the server can recieve and store it, and to test again that the interactive mode on the client works & All is successful and the client can interactively send a file to the server, and the server can recieve and store it properly \\
+    2 & To ensure that the client can send a file to the server, and that the server can receive and store it, and to test again that the interactive mode on the client works & All is successful, the client can interactively send a file to the server, and the server can receive and store it properly \\
     \hline
     3 & To ensure that the program can be run as one executable binary (rather than having to install dotnet and run the project with \texttt{dotnet run}) & It can be run through one executable \\
     \hline
@@ -122,7 +122,7 @@ The reasons for the tests above, and the conclusions that can be drawn from them
     \hline
     10 & To ensure that the server program does not use too much CPU time & The CPU usage of the server program \textbf{on my client's designated server laptop} was as expected/within the bounds set throughout \\
     \hline
-    11 & To ensure that plaintext files have their sizes significantly reduced by compression, and to verify that other files do not have their sizes increased (more than a byte, which is necessary) & The compression works as expected, being very effective in compressing plaintext files, and not increasing the sizes of the other files (significantly) \\
+    11 & To ensure that plaintext files have their sizes significantly reduced by compression, and to verify that other files do not have their sizes increased & The compression works as expected, being very effective in compressing plaintext files, and not increasing the sizes of the other files \\
     \hline
     12 & Ensures that files can be retrieved from the server back to the client, and checks that the decompression algorithm works, since the files stored on the server are compressed but should be returned to the client uncompressed & The server can return files to the client correctly, and the decompression works as expected \\
     \hline

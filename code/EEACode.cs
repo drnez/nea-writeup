@@ -1,4 +1,4 @@
-private static BigInteger GetModMultInverse(BigInteger a, BigInteger m) // uses the extended euclidian algorithm to find x s.t. ax = 1 (mod m)
+private static BigInteger GetModMultInverse(BigInteger a, BigInteger m) // uses the extended euclidean algorithm to find x s.t. ax = 1 (mod m)
 {
     BigInteger r_0 = a;
     BigInteger s_0 = 1;

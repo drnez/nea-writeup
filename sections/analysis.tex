@@ -71,7 +71,7 @@ I have summarised my key findings from this interview below:
     \item The files must be encrypted in transmission,
     \item The files should be compressed before transmission, and decompressed upon retrieval by the client, so that the transmission is as quick as possible, and as little space as possible is taken up on the server,
     \item Only text files need to be compressed, as most other files are already compressed,
-    \item There should be no graphical user interface, but instead a command-line interface that can be used non-interactively,
+    \item There should be no graphical user interface, but instead a command line interface that can be used non-interactively,
     \item There is a hard deadline of the 31\textsuperscript{st} March 2026 for finishing the project.
 \end{itemize}
 
@@ -91,7 +91,7 @@ Based on the requirements established in the client interview, I have establishe
         \item It should be very unlikely for the client to use more than 50MB of RAM for prolonged periods of time,
         \item It should be very unlikely for the client to use more than 5\% of CPU time for prolonged periods of time while running on a modern laptop; my client's processor, the Intel i9-12950HX, can be used for a test case,
     \end{enumerate}
-    \item It should be usable with an intuitive command-line interface, not requiring interactive input, 
+    \item It should be usable with an intuitive command line interface, not requiring interactive input, 
     \begin{enumerate}
         \item All required functions of the program should be able to be passed in through command line flags and parameters, 
         \item There can be an optional interactive mode, but this should not allow any functionality than the non-interactive mode does not, 
@@ -167,7 +167,7 @@ The three algorithms I will consider for this are RSA, Diffie-Hellman Key Exchan
 
 These algorithms are commonly used, and very well documented. All three rely on mathematical problems that are intractable to solve without some prior knowledge: RSA relies on the difficulty in factoring a large semiprime integer (one with exactly two prime factors), while Diffie-Hellman and elliptic curve systems rely on the discrete logarithm problem. 
 
-While elliptic curve cryptography can provide equivalent security with much smaller keys, and requires less processing power for the sender and receiver, this is unlikely to be at all impactful on the small scale of this backup utility, where this asymmetric encryption is just used to share a symmetric encryption key. However, these algorithms are tough to implement, and involve very high-level mathematics. This could increase the time taken to deliver the program past the client’s deadline, and adds more avenues for potential bugs to develop. This can be very dangerous, as shown in the following paper \cite{10.1007/978-3-642-27954-6_11}, where a small error in the implementation led to researchers being able to extract the full key. 
+While elliptic curve cryptography can provide equivalent security with much smaller keys, and requires less processing power for the sender and receiver, this is unlikely to be at all impactful on the small scale of this backup utility, where this asymmetric encryption is just used to share a symmetric encryption key. However, these algorithms are tough to implement, and involve very high-level mathematics. This could increase the time taken to deliver the program past the client’s deadline, and add more avenues for potential bugs to develop. This can be very dangerous, as shown in the following paper \cite{10.1007/978-3-642-27954-6_11}, where a small error in the implementation led to researchers being able to extract the full key. 
 
 Plus, implementing it could cause me to fall short of my deadline, and it is very important for my client that I do not. Therefore, I will exclude elliptic curve cryptography from my choices.
 
@@ -257,7 +257,7 @@ Run-Length Encoding works by representing repeated runs of one character as freq
 
 Prediction by Partial Matching uses complex statistical techniques to predict the most probable next characters based on the previous ones, assigning more probable characters shorter binary representations. However, to create and optimise such an algorithm, it would take a long time, which may cause be to pass my client's non-negotiable deadline. Plus, it is more computationally complex than the alternatives, so the compression and decompression algorithms would use more memory and processor time, and would likely take longer to run.
 
-Huffman Coding provides a perfect balance between complexity and how effective it is at compressing plaintext. It looks at the file as a whole, assigning more frequently used characters shorter binary representations. This is very effective for text files, where some letters are used more often than others. Moreover, most available Unicode characters are never used (special characters, scientific symbols, foreign language characters...) in most files, so the majority of characters would have a shorter representation in a file compressed in this way. While it may be more complex than Run-Length Encoding, it is perfectly feasible for me to implement it in the given time, and the implementations can be very quick! Even though Prediction by Partial Matching can in some cases provide better compression, for the files where this really matters to my client, they can just compress them themselves before backing them up.
+Huffman Coding provides a perfect balance between complexity and how effective it is at compressing plaintext. It looks at the file as a whole, assigning more frequently used characters shorter binary representations. This is very effective for text files, where some letters are used more often than others. Moreover, most available Unicode characters are never used (special characters, scientific symbols, foreign language characters...) in most files, so the majority of characters would have a shorter representation in a file compressed in this way. While it may be more complex than Run-Length Encoding, it is perfectly feasible for me to implement it in the given time, and the implementations can be very quick. Even though Prediction by Partial Matching can in some cases provide better compression, for the files where this really matters to my client, they can just compress them themselves before backing them up.
 
 I have researched the Huffman Coding algorithm through this website \cite{PurdueHuffman}, which gives an explanation of one implementation of it.
 
@@ -275,25 +275,27 @@ The high level steps of the decoding algorithm are as follows:
 \begin{enumerate}
     \item Read the Huffman tree from the start of the compressed file, representing it as a tree in the program,
     \item Carry out a post-order traversal of the tree to build up a mapping of the Huffman binary bit-strings to the characters they represent,
-    \item Go through all of the bits in the compressed file, writing the character they represent to the decompressed file.
+    \item Go through every bit in the compressed file, writing the character they represent to the decompressed file.
 \end{enumerate}
+
+The final consideration that is needed is whether the compression will occur on the client device, before being sent to the server, or on the server, having been received. Compression on the client end is the better choice for two key reasons. Firstly, it would mean that smaller files are transferred, resulting in quicker transmissions and minimising the chances of errors occurring during transmission. Secondly, my client is planning to use a much more powerful device as their client than their server, so it would be beneficial to carry out as much computation as possible there, rather than on the much older server.
 
 \subsection{Class Diagram}
 
 Figure \ref{AnalysisClassDiagram} shows a proposed design for the classes in my program.
 
-\begin{figure}[ht]
+The FileSender and FileReceiver classes will contain methods related to sending and receiving data. These methods can be used by both the client and server programs, and so the Client and Server classes - which will contain the main methods run by the client and the server respectively - depend on them. These classes both inherit from an abstract base FileTransferer class which will contain any methods or attributes common to both classes.
+
+The HuffmanNode is a custom data structure representing the nodes that form a Huffman tree. This is used by both the HuffmanEncoder and HuffmanDecoder classes, which contain methods for encoding plaintext into Huffman, and decoding Huffman compressed text back into plaintext respectively. The ByteMaker and ByteReader classes will deal with any complexities that may arise in the process of reading from and writing to binary files.
+
+Finally, the SetupRSA class will contain methods and data relating to the creation of RSA public and private keys, SetupAES will establish the shared AES encryption key, the Hashing class will allow methods for generating and verifying hashes, and the Transmission class will contain common procedures needed to serialise data into a format that can be decoded once received, and to decode such data once it has been received. These are of use in the FileSender and FileReceiver classes.
+
+\begin{figure}[hb]
     \centering
-    \includegraphics[width=\linewidth]{images/Analysis-class-diagram.jpg} 
+    \includegraphics[width=\linewidth]{images/Analysis-class-diagram.png} 
     \caption{Proposed UML Class Diagram}
     \label{AnalysisClassDiagram}
 \end{figure}
-
-The FileSender and FileReceiver classes will contain methods related to sending and receiving data. These methods can be used by both the client and server programs, and so the Client and Server classes - which will contain the main methods run by the client and the server respectively - depend on them. These classes both inherit from an abstract base FileTransferer class which will contain any methods or attributes common to both classes.
-
-The HuffmanNode is a custom data structure representing the nodes that form a Huffman tree. This is used by both the HuffmanEncoder and HuffmanDecoder classes, which contain methods for encoding plaintext into Huffman, and decoding Huffman compressed text back into plaintext respectively. The ByteMaker and ByteReader classes will deal with any complexities that may arise in the processor of reading from and writing to binary files.
-
-Finally, the SetupRSA class will contain methods and data relating to the creation of RSA public and private keys, SetupAES will establish the shared AES encryption key, the Hasing class will allow methods for generating and verifying hashes, and the Transmission class will contain common procedures needed to serialise data into a format that can be decoded once received, and to decode such data once it has been received. These are of use in the FileSender and FileReceiver classes.
 
 \subsection{Order of Completion}
 

@@ -15,7 +15,7 @@ In the design of my program, I expect that the key (though not only) points of c
 
 \subsection{Huffman Compression}
 
-As decided upon in my Analysis (Section \ref{CompressionAnalysis}), I will use Huffman Coding to compress all plaintext files that are being backed up. The compression and decompression will occur on the client-side, before the files and sent, and after they are received.
+As decided upon in my Analysis (Section \ref{CompressionAnalysis}), I will use Huffman Coding to compress all plaintext files that are being backed up. The compression and decompression will occur on the client-side, before the files are sent, and after they are received.
 
 The benefits of this are twofold. Firstly, this means less data is transmitted, reducing the risk of corruption, and speeding up the backup process. Secondly, as identified in my Client Interview (Section \ref{ClientInterview}), my client will run the server on hardware that is significantly less powerful than their laptop, which acts as the client. Therefore, it is advantageous to run as much processing as possible on the client-side.
 
@@ -60,7 +60,7 @@ The code for this procedure can be found in Listing \ref{SearchTreeCode}.
 This tree that is searched in the above procedure is created using a priority queue to continually merge trees, until just one is left. The snippet of the flowchart that relates to this section of the code can be found in Figure \ref{HuffmanPriorityQueueFlowchart}.
 
 \FloatBarrier
-\begin{figure}[hb]
+\begin{figure}[ht]
     \includegraphics[width=0.47\linewidth]{images/HuffmanPriorityQueue.pdf}
     \centering
     \caption{A flowchart depicting the creation of the Huffman tree}
@@ -107,7 +107,7 @@ The start of the compressed file contains an encoding of the Huffman tree used. 
 
 If a 1 bit is read - indicating a character comes next - the next 8 bits are read and converted into a Unicode character, then pushed onto the stack as a new node (which is in effect a tree of size 1).
 
-Otherwise, if a 0 bit is read, one of two options occurs. If the stack is of size 1, this indicates that the zero read represented the end of the tree encoding, and the program pop's the one tree in the stack, and uses that as the Huffman tree to decode the text in the file. Otherwise, the 0 indicates a non-leaf node, so the top two trees are popped from the stack, and made children of a new node which is pushed back onto the stack. The first tree popped becomes the right child.
+Otherwise, if a 0 bit is read, one of two options occurs. If the stack is of size 1, this indicates that the zero read represented the end of the tree encoding, and the program pops the one tree in the stack, and uses that as the Huffman tree to decode the text in the file. Otherwise, the 0 indicates a non-leaf node, so the top two trees are popped from the stack, and made children of a new node which is pushed back onto the stack. The first tree popped becomes the right child.
 
 The code for this algorithm can be found in Listing \ref{HuffmanStackCode}.
 
@@ -115,7 +115,7 @@ The code for this algorithm can be found in Listing \ref{HuffmanStackCode}.
 
 \FloatBarrier
 \lstinputlisting[
-    caption={Code for the reconstructing the Huffman tree},
+    caption={Code for reconstructing the Huffman tree},
     label={HuffmanStackCode},
 ]{code/HuffmanStackCode.cs}
 \FloatBarrier
@@ -228,7 +228,7 @@ Listing \ref{MillerRabinCode} contains the code for this algorithm.
 
 \FloatBarrier
 \lstinputlisting[
-    caption={Code for the MillerRabin algorithm},
+    caption={Code for the Miller-Rabin algorithm},
     label={MillerRabinCode}
 ]{code/MillerRabinCode.cs}
 \FloatBarrier
@@ -283,7 +283,7 @@ All that is left now is to put this all together, and generate the public and pr
 ]{code/GenerateKeysCode.cs}
 \FloatBarrier
 
-\subsection{Verifying the integrity of communications}
+\subsection{Verifying Communication Integrity}
 
 To verify the integrity of the files transmitted, as described in the Analysis (Section \ref{VerifyingIntegritySSS}), I will compute a hash of the data being sent, and transmit the hash of the message before the rest of the message. The recipient can then compute the hash of the message itself, and compare that to the hash it received. If they match, then they can be confident that the message was not corrupted in transmission.
 
@@ -306,7 +306,7 @@ The verification subroutine checks each byte in the byte arrays representing the
 ]{code/Hashing.cs}
 \FloatBarrier
 
-\subsection{Transmission procedures}
+\subsection{Transmission Procedures}
 
 In order to send messages through a network stream, at the simplest level, there must be a method for the recipient to know how long the data being sent is. I can achieve this by encoding the number of bytes to expect in the first 4 bytes of each transmission. As such, the receiver knows to read the first 4 bytes (which will be an integer $n$), read the next $n$ bytes in whatever format it is expecting, and then repeat this procedure for the rest of the stream, knowing that it is a new transmission.
 
@@ -327,7 +327,7 @@ This requires some serialisation and "de-serialisation" subroutines to handle ad
 ]{code/Transmission.cs}
 \FloatBarrier
 
-Having established an encrypted AES stream (using the CryptoStream class in C\#), some helper methods are needed to send and receive various data types. I designed FileSender and FileReciever classes for this purpose. These both inherit from an abstract Transferer class, which stores the common CryptoStream attribute, and a common constructor for the two derived classes. Using classes, rather than just procedures, is beneficial here since, as well as grouping together the related subroutines cleanly, the CryptoStream can be passed in just once upon instantiation of an object. It is important that this is not re-created, since that would interrupt the communication stream. Pseudocode for these classes can be found in Listing \ref{TransfererPseudocode}, and the code in Listing \ref{TransfererCode}.
+Having established an encrypted AES stream (using the CryptoStream class in C\#), some helper methods are needed to send and receive various data types. I designed FileSender and FileReceiver classes for this purpose. These both inherit from an abstract Transferer class, which stores the common CryptoStream attribute, and a common constructor for the two derived classes. Using classes, rather than just procedures, is beneficial here since, as well as grouping together the related subroutines cleanly, the CryptoStream can be passed in just once upon instantiation of an object. It is important that this is not re-created, since that would interrupt the communication stream. Pseudocode for these classes can be found in Listing \ref{TransfererPseudocode}, and the code in Listing \ref{TransfererCode}.
 
 \FloatBarrier
 \lstinputlisting[
