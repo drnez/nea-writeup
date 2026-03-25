@@ -10,6 +10,57 @@
 
 \subsection{Evaluation Against the Requirements}
 
+The original specification, from the Analysis, is copied again below:
+
+\begin{enumerate}
+    \item The program should allow the user to create file backups on a server, run by the client themselves, 
+    \begin{enumerate}
+        \item The software should be able to run on both the client and server, with appropriate functionality for each situation,
+        \item They should be able to work together, with a server being able to store the user’s backed up files, 
+    \end{enumerate}
+    \item The client program should run on modern Linux systems, usable on a laptop or desktop computer, 
+    \begin{enumerate}
+        \item An installable binary package should be created that is executable on amd64 Linux systems, 
+        \item It should be very unlikely for the client to use more than 50MB of RAM for prolonged periods of time,
+        \item It should be very unlikely for the client to use more than 5\% of CPU time for prolonged periods of time while running on a modern laptop; my client's processor, the Intel i9-12950HX, can be used for a test case,
+    \end{enumerate}
+    \item It should be usable with an intuitive command line interface, not requiring interactive input, 
+    \begin{enumerate}
+        \item All required functions of the program should be able to be passed in through command line flags and parameters, 
+        \item There can be an optional interactive mode, but this should not allow any functionality than the non-interactive mode does not, 
+        \item There should be no graphical interface, 
+    \end{enumerate}
+    \item The server should be able to run on a low-end laptop 10-15 years old, 
+    \begin{enumerate}
+        \item The program should avoid reading and writing to the system drives as much as possible, since most such devices use HDDs, 
+        \item It should be very unlikely for the server program to use more than 200MB of RAM for prolonged periods of time,
+        \item It should be very unlikely for the server program to use more than 10\% of CPU time for prolonged periods of time while running on such a device; my client's desired server's processor, a 2\textsuperscript{nd} generation Intel i5 processor, can be used as a test case, 
+    \end{enumerate}
+    \item All file transfers should be secure, so a man-in-the-middle would not be able to intercept data,
+    \begin{enumerate}
+        \item Any data intercepted should be of a format that the interceptor would not be able to decipher, or gain any useful information from, 
+        \item The methods used should have their correctness checked,
+    \end{enumerate}
+    \item Text files stored on the server should be compressed such that they use a reasonable amount of storage, 
+    \begin{enumerate}
+        \item They should be at most as large as (or very close to) the uncompressed files, i.e. the file size should never increase following compression by more than 10 bytes,
+        \item The client should be able to decompress any file when needed by the user, storing any needed details about the compression within the file, 
+    \end{enumerate}
+    \item File transfers should be verifiably correct, so data is not corrupted during transmission,
+    \begin{enumerate}
+        \item Once a file has been transferred to the server, it should be compared with the original file on the client device, 
+        \item This checking should be with a much smaller version of the file than that which was originally sent for most files – it should be up to 10kB in size, 
+    \end{enumerate}
+    \item Generally, the program should work robustly,
+        \begin{enumerate}
+            \item Problems with user input or command line arguments should be gracefully handled,
+            \item The program should not crash while running,
+            \item Errors should be reported to the client, server, or both, depending on which is appropriate in the situation.
+        \end{enumerate}
+\end{enumerate}
+
+This table, below, details the extent to which the specification points have been achieved.
+
 \begin{longtable}{|c|p{0.9\linewidth}|}
 \hline
 Spec & To what extent has it been achieved? \\
